@@ -1,0 +1,3 @@
+#!/usr/bin/sh
+
+odin build src/ -vet-unused-variables -vet-cast -out:logl

@@ -1,0 +1,3 @@
+// VBO - stores model data
+// VAO - stores vertex attributes
+// EBO - stores indices
