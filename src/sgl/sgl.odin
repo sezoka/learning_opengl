@@ -49,7 +49,7 @@ finishFrame :: proc(ctx: ^Context) {
 }
 
 clearScreen :: proc(r, g, b, a: f32) {
-    _clearScreenOpenGL(r, g, b, a)
+    _clearScreenGL(r, g, b, a)
 }
 
 _swapWindow :: proc(ctx: ^Context) {
@@ -76,8 +76,16 @@ _pollEvents :: proc(ctx: ^Context) {
     }
 }
 
+enableWireframeMode :: proc() {
+    _enableWireframeModeGL()
+}
+
+disableWireframeMode :: proc() {
+    _disableWireframeModeGL()
+}
+
 _updateViewportSize :: proc(width, height: u32) {
-    _updateViewportSizeOpenGL(width, height)
+    _updateViewportSizeGL(width, height)
 }
 
 isWindowShouldClose :: proc(ctx: Context) -> bool {
@@ -130,3 +138,10 @@ ally :: proc() -> runtime.Allocator {
     return context.allocator
 }
 
+getTimeMs :: proc() -> u64 {
+    return sdl.GetTicks();
+}
+
+getTime :: proc() -> f64 {
+    return f64(getTimeMs()) / 1000;
+}

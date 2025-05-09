@@ -87,6 +87,11 @@ checkCompileErrors :: proc(obj: u32, type: enum { Fragment, Vertex, Program }) -
     return true
 }
 
+setUniformVec4 :: proc(s: Shader, name: cstring, v: Vec4) {
+    gl.Uniform4f(gl.GetUniformLocation(s.id, name), v.x, v.y, v.z, v.w)
+}
+
+
 //
 // void Shader::SetFloat(const char *name, float value, bool useShader)
 // {
@@ -123,12 +128,6 @@ checkCompileErrors :: proc(obj: u32, type: enum { Fragment, Vertex, Program }) -
 //     if (useShader)
 //         this->Use();
 //     glUniform3f(glGetUniformLocation(this->ID, name), value.x, value.y, value.z);
-// }
-// void Shader::SetVector4f(const char *name, float x, float y, float z, float w, bool useShader)
-// {
-//     if (useShader)
-//         this->Use();
-//     glUniform4f(glGetUniformLocation(this->ID, name), x, y, z, w);
 // }
 // void Shader::SetVector4f(const char *name, const glm::vec4 &value, bool useShader)
 // {

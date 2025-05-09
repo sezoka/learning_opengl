@@ -13,11 +13,19 @@ _initGL :: proc(width, height: u32) -> bool {
     return true
 }
 
-_updateViewportSizeOpenGL :: proc(width, height: u32) {
+_updateViewportSizeGL :: proc(width, height: u32) {
     gl.Viewport(0, 0, i32(width), i32(height));
 }
 
-_clearScreenOpenGL :: proc(r, g, b, a: f32) {
+_clearScreenGL :: proc(r, g, b, a: f32) {
     gl.ClearColor(r, g, b, a);
     gl.Clear(gl.COLOR_BUFFER_BIT);
+}
+
+_enableWireframeModeGL :: proc() {
+    gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+}
+
+_disableWireframeModeGL :: proc() {
+    gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 }

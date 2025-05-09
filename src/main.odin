@@ -5,6 +5,7 @@ import "core:log"
 import "core:fmt"
 import "core:os"
 import "core:mem"
+import "core:math"
 import gl "vendor:OpenGL"
 
 ODIN_DEBUG :: true
@@ -15,9 +16,9 @@ Game :: struct {
 g : Game
 
 triangle_verts := [?]f32 {
-    -0.5, -0.5, 0.0,
-     0.5, -0.5, 0.0,
-     0.0,  0.5, 0.0
+    -0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
+     0.5, -0.5, 0.0, 0.0, 1.0, 0.0,
+     0.0,  0.5, 0.0, 0.0, 0.0, 1.0,
 };  
 
 run :: proc() {
@@ -26,7 +27,7 @@ run :: proc() {
 
     simple_shader := sgl.loadShaderFromFile("./shaders/vertex_shader.glsl", "./shaders/frag_shader.glsl")
 
-    vbo : u32
+    vbo: u32
     vao: u32
     { // TRIANGLE INIT
         gl.GenBuffers(1, &vbo)
@@ -36,8 +37,10 @@ run :: proc() {
         gl.BufferData(gl.ARRAY_BUFFER, size_of(triangle_verts), &triangle_verts, gl.STATIC_DRAW)
 
         gl.BindVertexArray(vao);
-        gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 3 * size_of(f32), 0);
+        gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 6 * size_of(f32), 0);
         gl.EnableVertexAttribArray(0);  
+        gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, 6 * size_of(f32), 3 * size_of(f32));
+        gl.EnableVertexAttribArray(1);  
     }
 
 
@@ -47,6 +50,9 @@ run :: proc() {
         sgl.clearScreen(0.2, 0.2, 0.2, 1)
 
         sgl.useShader(simple_shader)
+        green_value := f32(math.sin(sgl.getTime())) / 2 + 0.5
+        sgl.setUniformVec4(simple_shader, "u_color", {0, green_value, 0, 1})
+
         gl.BindVertexArray(vao);
         gl.DrawArrays(gl.TRIANGLES, 0, 3)
     }
