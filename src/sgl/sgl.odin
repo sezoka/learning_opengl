@@ -145,3 +145,7 @@ getTimeMs :: proc() -> u64 {
 getTime :: proc() -> f64 {
     return f64(getTimeMs()) / 1000;
 }
+
+unreachable :: proc() {
+    panic("unreachable")
+}

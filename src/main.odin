@@ -16,10 +16,17 @@ Game :: struct {
 g : Game
 
 triangle_verts := [?]f32 {
-    -0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
-     0.5, -0.5, 0.0, 0.0, 1.0, 0.0,
-     0.0,  0.5, 0.0, 0.0, 0.0, 1.0,
+     // positions // // colors  //  // tex coords //
+     0.5,  0.5, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+     0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0,
+    -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+    -0.5,  0.5, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
 };  
+
+triangle_indices := [?]u32 {
+    0, 1, 3,
+    1, 2, 3 
+}
 
 run :: proc() {
     g.sgl = sgl.init(800, 600, "learn opengl")
@@ -27,21 +34,35 @@ run :: proc() {
 
     simple_shader := sgl.loadShaderFromFile("./shaders/vertex_shader.glsl", "./shaders/frag_shader.glsl")
 
+    container_tex := sgl.loadTexture2D("./assets/container.jpg")
+    face_tex := sgl.loadTexture2D("./assets/awesomeface.png")
+
+    // fmt.println(container_tex.format, face_tex.format)
+
     vbo: u32
     vao: u32
+    ebo: u32
     { // TRIANGLE INIT
         gl.GenBuffers(1, &vbo)
         gl.GenVertexArrays(1, &vao)
+        gl.GenBuffers(1, &ebo)
 
         gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
         gl.BufferData(gl.ARRAY_BUFFER, size_of(triangle_verts), &triangle_verts, gl.STATIC_DRAW)
 
         gl.BindVertexArray(vao);
-        gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 6 * size_of(f32), 0);
-        gl.EnableVertexAttribArray(0);  
-        gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, 6 * size_of(f32), 3 * size_of(f32));
-        gl.EnableVertexAttribArray(1);  
+        stride : i32 = 8 * size_of(f32)
+        gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, stride, 0);
+        gl.EnableVertexAttribArray(0)  
+        gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, stride, 3 * size_of(f32))
+        gl.EnableVertexAttribArray(1)  
+        gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, stride, 6 * size_of(f32))
+        gl.EnableVertexAttribArray(2)
+
+        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
+        gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(triangle_indices), &triangle_indices, gl.STATIC_DRAW);
     }
+
 
 
     for !sgl.isWindowShouldClose(g.sgl) {
@@ -51,10 +72,14 @@ run :: proc() {
 
         sgl.useShader(simple_shader)
         green_value := f32(math.sin(sgl.getTime())) / 2 + 0.5
-        sgl.setUniformVec4(simple_shader, "u_color", {0, green_value, 0, 1})
+        sgl.setUniform_Vec4(simple_shader, "u_color", {0, green_value, 0, 1})
 
-        gl.BindVertexArray(vao);
-        gl.DrawArrays(gl.TRIANGLES, 0, 3)
+        sgl.useTexture2D(container_tex, simple_shader, "texture1", 0)
+        sgl.useTexture2D(face_tex, simple_shader, "texture2", 1)
+
+        gl.BindVertexArray(vao)
+        gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
+        gl.BindVertexArray(0)
     }
 }
 

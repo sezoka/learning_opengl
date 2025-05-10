@@ -40,15 +40,6 @@ compileShaderProgram :: proc(vert_src: string, frag_src: string) -> (s: Shader, 
         return {}, false
     }
 
-    // if geometry shader source code is given, also compile geometry shader
-    // if (geometrySource != nil)
-    // {
-    //     gShader = glCreateShader(gl.GEOMETRY_SHADER);
-    //     gl.ShaderSource(gShader, 1, &geometrySource, nil);
-    //     gl.CompileShader(gShader);
-    //     checkCompileErrors(gShader, "GEOMETRY");
-    // }
-
     s.id = gl.CreateProgram()
     gl.AttachShader(s.id, vert_shader)
     gl.AttachShader(s.id, frag_shader)
@@ -87,10 +78,17 @@ checkCompileErrors :: proc(obj: u32, type: enum { Fragment, Vertex, Program }) -
     return true
 }
 
-setUniformVec4 :: proc(s: Shader, name: cstring, v: Vec4) {
+setUniform_Vec4 :: proc(s: Shader, name: cstring, v: Vec4) {
     gl.Uniform4f(gl.GetUniformLocation(s.id, name), v.x, v.y, v.z, v.w)
 }
 
+setUniform_i32 :: proc(s: Shader, name: cstring, v: i32) {
+    gl.Uniform1i(gl.GetUniformLocation(s.id, name), v)
+}
+
+setUniform_u32 :: proc(s: Shader, name: cstring, v: u32) {
+    gl.Uniform1ui(gl.GetUniformLocation(s.id, name), v)
+}
 
 //
 // void Shader::SetFloat(const char *name, float value, bool useShader)
@@ -98,12 +96,6 @@ setUniformVec4 :: proc(s: Shader, name: cstring, v: Vec4) {
 //     if (useShader)
 //         this->Use();
 //     glUniform1f(glGetUniformLocation(this->ID, name), value);
-// }
-// void Shader::SetInteger(const char *name, int value, bool useShader)
-// {
-//     if (useShader)
-//         this->Use();
-//     glUniform1i(glGetUniformLocation(this->ID, name), value);
 // }
 // void Shader::SetVector2f(const char *name, float x, float y, bool useShader)
 // {
