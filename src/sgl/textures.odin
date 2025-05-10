@@ -12,11 +12,6 @@ bindTexture2D :: proc(tex: Texture2D, unit: u32) {
     gl.BindTexture(gl.TEXTURE_2D, tex.id)
 }
 
-useTexture2D :: proc(tex: Texture2D, shader: Shader, name: cstring, unit: u32) {
-    bindTexture2D(tex, unit)
-    setUniform_i32(shader, name, i32(unit))
-}
-
 _myImgFormatToGLImgFormat :: proc(imf: ImageFormat) -> i32 {
     switch (imf) {
     case .RGB:

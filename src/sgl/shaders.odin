@@ -3,6 +3,7 @@ package sgl
 import os "core:os/os2"
 import gl "vendor:OpenGL"
 import "core:log"
+import "core:math/linalg"
 import "core:strings"
 
 Shader :: struct {
@@ -88,6 +89,16 @@ setUniform_i32 :: proc(s: Shader, name: cstring, v: i32) {
 
 setUniform_u32 :: proc(s: Shader, name: cstring, v: u32) {
     gl.Uniform1ui(gl.GetUniformLocation(s.id, name), v)
+}
+
+setUniform_Mat4 :: proc(s: Shader, name: cstring, v: Mat4) {
+    mat_arr := linalg.matrix_flatten(v)
+    gl.UniformMatrix4fv(gl.GetUniformLocation(s.id, name), 1, gl.FALSE, raw_data(mat_arr[:]))
+}
+
+setUniform_Texture2D :: proc(s: Shader, name: cstring, tex: Texture2D, unit: u32) {
+    bindTexture2D(tex, unit)
+    setUniform_i32(s, name, i32(unit))
 }
 
 //

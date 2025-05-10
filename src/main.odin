@@ -6,6 +6,7 @@ import "core:fmt"
 import "core:os"
 import "core:mem"
 import "core:math"
+import "core:math/linalg"
 import gl "vendor:OpenGL"
 
 ODIN_DEBUG :: true
@@ -63,19 +64,22 @@ run :: proc() {
         gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(triangle_indices), &triangle_indices, gl.STATIC_DRAW);
     }
 
-
-
     for !sgl.isWindowShouldClose(g.sgl) {
         defer sgl.finishFrame(&g.sgl)
 
-        sgl.clearScreen(0.2, 0.2, 0.2, 1)
+        sgl.clearScreen(0.1, 0.3, 0.3, 1)
 
         sgl.useShader(simple_shader)
         green_value := f32(math.sin(sgl.getTime())) / 2 + 0.5
         sgl.setUniform_Vec4(simple_shader, "u_color", {0, green_value, 0, 1})
 
-        sgl.useTexture2D(container_tex, simple_shader, "texture1", 0)
-        sgl.useTexture2D(face_tex, simple_shader, "texture2", 1)
+        transform := linalg.identity(Mat4)
+        transform *= linalg.matrix4_translate_f32({0.5, -0.5, 0.0})
+        transform *= linalg.matrix4_rotate_f32(f32(sgl.getTime()), {0, 0, 1})
+        sgl.setUniform_Mat4(simple_shader, "transform", transform)
+
+        sgl.setUniform_Texture2D(simple_shader, "texture1", container_tex, 0)
+        sgl.setUniform_Texture2D(simple_shader, "texture2", face_tex, 1)
 
         gl.BindVertexArray(vao)
         gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
