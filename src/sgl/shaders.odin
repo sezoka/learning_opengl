@@ -83,6 +83,10 @@ setUniformVec4 :: proc(s: Shader, name: cstring, v: Vec4) {
     gl.Uniform4f(gl.GetUniformLocation(s.id, name), v.x, v.y, v.z, v.w)
 }
 
+setUniformVec3 :: proc(s: Shader, name: cstring, v: Vec3) {
+    gl.Uniform3f(gl.GetUniformLocation(s.id, name), v.x, v.y, v.z)
+}
+
 setUniformI32 :: proc(s: Shader, name: cstring, v: i32) {
     gl.Uniform1i(gl.GetUniformLocation(s.id, name), v)
 }
