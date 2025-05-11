@@ -12,6 +12,7 @@ import gl "vendor:OpenGL"
 ODIN_DEBUG :: true
 
 Game :: struct {
+    camera: sgl.FPSCamera,
     sgl: sgl.Context,
 }
 g : Game
@@ -82,8 +83,6 @@ run :: proc() {
     container_tex := sgl.loadTexture2D("./assets/container.jpg")
     face_tex := sgl.loadTexture2D("./assets/awesomeface.png")
 
-    // fmt.println(container_tex.format, face_tex.format)
-
     vbo: u32
     vao: u32
     // ebo: u32
@@ -106,9 +105,16 @@ run :: proc() {
         // gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(triangle_indices), &triangle_indices, gl.STATIC_DRAW);
     }
 
+    g.camera = sgl.makeFPSCamera(
+        sgl.getScreenWidth(g.sgl),
+        sgl.getScreenHeight(g.sgl),
+        fov = 45,
+    )
 
     for !sgl.isWindowShouldClose(g.sgl) {
         defer sgl.finishFrame(&g.sgl)
+
+        updateFPSCamera()
 
         sgl.clearScreen(0.2, 0.3, 0.3, 1)
 
@@ -117,12 +123,12 @@ run :: proc() {
         sgl.setUniformVec4(simple_shader, "u_color", {0, green_value, 0, 1})
 
         projection := sgl.makePerspectiveMat4(
-            45,
-            f32(sgl.getScreenWidth(&g.sgl)) / f32(sgl.getScreenHeight(&g.sgl)),
-            0.1,
-            100.0
+            g.camera.base.fov,
+            f32(sgl.getScreenWidth(g.sgl)) / f32(sgl.getScreenHeight(g.sgl)),
+            g.camera.base.near_frustum,
+            g.camera.base.far_frustum,
         );
-        view := sgl.makeTranslateMat4({ 0.0, 0.0, 3.0 });
+        view := sgl.makeViewMatrix(g.camera.base.pos, g.camera.base.front, g.camera.base.up);
 
         sgl.setUniformTexture2D(simple_shader, "texture1", container_tex, 0)
         sgl.setUniformTexture2D(simple_shader, "texture2", face_tex, 1)
@@ -137,6 +143,19 @@ run :: proc() {
         }
         gl.BindVertexArray(0)
     }
+}
+
+updateFPSCamera :: proc() {
+    dir : sgl.Direction3DSet
+    if sgl.isButtonDown(g.sgl, .W) do dir += { .Forward }
+    if sgl.isButtonDown(g.sgl, .S) do dir += { .Backward }
+    if sgl.isButtonDown(g.sgl, .A) do dir += { .Left }
+    if sgl.isButtonDown(g.sgl, .D) do dir += { .Right }
+    if sgl.isButtonDown(g.sgl, .SPACE) do dir += { .Up }
+    if sgl.isButtonDown(g.sgl, .LSHIFT) do dir += { .Down }
+    sgl.updateFPSCameraPosition(&g.camera, sgl.getDelta(g.sgl), dir)
+    sgl.updateFPSCameraRotation(&g.camera, sgl.getMouseDeltaX(g.sgl), sgl.getMouseDeltaY(g.sgl))
+    sgl.updateFPSCamera(&g.camera)
 }
 
 main :: proc() {

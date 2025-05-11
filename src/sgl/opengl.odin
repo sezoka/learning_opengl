@@ -34,3 +34,11 @@ _disableWireframeModeGL :: proc() {
 _clearZBufferGL :: proc() {
     gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }
+
+_enableVSyncGL :: proc() {
+    sdl.GL_SetSwapInterval(1)
+}
+
+_disableVSyncGL :: proc() {
+    sdl.GL_SetSwapInterval(0)
+}
