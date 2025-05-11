@@ -79,26 +79,26 @@ checkCompileErrors :: proc(obj: u32, type: enum { Fragment, Vertex, Program }) -
     return true
 }
 
-setUniform_Vec4 :: proc(s: Shader, name: cstring, v: Vec4) {
+setUniformVec4 :: proc(s: Shader, name: cstring, v: Vec4) {
     gl.Uniform4f(gl.GetUniformLocation(s.id, name), v.x, v.y, v.z, v.w)
 }
 
-setUniform_i32 :: proc(s: Shader, name: cstring, v: i32) {
+setUniformI32 :: proc(s: Shader, name: cstring, v: i32) {
     gl.Uniform1i(gl.GetUniformLocation(s.id, name), v)
 }
 
-setUniform_u32 :: proc(s: Shader, name: cstring, v: u32) {
+setUniformU32 :: proc(s: Shader, name: cstring, v: u32) {
     gl.Uniform1ui(gl.GetUniformLocation(s.id, name), v)
 }
 
-setUniform_Mat4 :: proc(s: Shader, name: cstring, v: Mat4) {
+setUniformMat4 :: proc(s: Shader, name: cstring, v: Mat4) {
     mat_arr := linalg.matrix_flatten(v)
     gl.UniformMatrix4fv(gl.GetUniformLocation(s.id, name), 1, gl.FALSE, raw_data(mat_arr[:]))
 }
 
-setUniform_Texture2D :: proc(s: Shader, name: cstring, tex: Texture2D, unit: u32) {
+setUniformTexture2D :: proc(s: Shader, name: cstring, tex: Texture2D, unit: u32) {
     bindTexture2D(tex, unit)
-    setUniform_i32(s, name, i32(unit))
+    setUniformI32(s, name, i32(unit))
 }
 
 //

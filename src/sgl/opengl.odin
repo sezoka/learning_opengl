@@ -9,6 +9,7 @@ _initGL :: proc(width, height: u32) -> bool {
     gl.Viewport(0, 0, i32(width), i32(height));
     gl.Enable(gl.BLEND);
     gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.Enable(gl.DEPTH_TEST);  
 
     return true
 }
@@ -28,4 +29,8 @@ _enableWireframeModeGL :: proc() {
 
 _disableWireframeModeGL :: proc() {
     gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+}
+
+_clearZBufferGL :: proc() {
+    gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }

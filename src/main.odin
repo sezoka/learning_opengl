@@ -17,18 +17,62 @@ Game :: struct {
 g : Game
 
 triangle_verts := [?]f32 {
-     // positions // // colors  //  // tex coords //
-     0.5,  0.5, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
-     0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0,
-    -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-    -0.5,  0.5, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
-};  
+    -0.5, -0.5, -0.5,  0.0, 0.0,
+     0.5, -0.5, -0.5,  1.0, 0.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+    -0.5,  0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 0.0,
 
-triangle_indices := [?]u32 {
-    0, 1, 3,
-    1, 2, 3 
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 1.0,
+     0.5,  0.5,  0.5,  1.0, 1.0,
+    -0.5,  0.5,  0.5,  0.0, 1.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+
+    -0.5,  0.5,  0.5,  1.0, 0.0,
+    -0.5,  0.5, -0.5,  1.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+    -0.5,  0.5,  0.5,  1.0, 0.0,
+
+     0.5,  0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5,  0.5,  0.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5, -0.5,  1.0, 1.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+
+    -0.5,  0.5, -0.5,  0.0, 1.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+    -0.5,  0.5,  0.5,  0.0, 0.0,
+    -0.5,  0.5, -0.5,  0.0, 1.0
+};
+
+cube_positions := [?]Vec3 {
+    { 0.0,  0.0,  0.0 }, 
+    { 2.0,  5.0, -15.0 }, 
+    {-1.5, -2.2, -2.5 },  
+    {-3.8, -2.0, -12.3 },  
+    { 2.4, -0.4, -3.5 },  
+    {-1.7,  3.0, -7.5 },  
+    { 1.3, -2.0, -2.5 },  
+    { 1.5,  2.0, -2.5 }, 
+    { 1.5,  0.2, -1.5 }, 
+    {-1.3,  1.0, -1.5 } ,
 }
-
+ 
 run :: proc() {
     g.sgl = sgl.init(800, 600, "learn opengl")
     defer sgl.deinit(&g.sgl)
@@ -42,47 +86,55 @@ run :: proc() {
 
     vbo: u32
     vao: u32
-    ebo: u32
+    // ebo: u32
     { // TRIANGLE INIT
         gl.GenBuffers(1, &vbo)
         gl.GenVertexArrays(1, &vao)
-        gl.GenBuffers(1, &ebo)
+        // gl.GenBuffers(1, &ebo)
 
         gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
         gl.BufferData(gl.ARRAY_BUFFER, size_of(triangle_verts), &triangle_verts, gl.STATIC_DRAW)
 
         gl.BindVertexArray(vao);
-        stride : i32 = 8 * size_of(f32)
+        stride : i32 = 5 * size_of(f32)
         gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, stride, 0);
         gl.EnableVertexAttribArray(0)  
-        gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, stride, 3 * size_of(f32))
-        gl.EnableVertexAttribArray(1)  
-        gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, stride, 6 * size_of(f32))
-        gl.EnableVertexAttribArray(2)
+        gl.VertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, stride, 3 * size_of(f32))
+        gl.EnableVertexAttribArray(1)
 
-        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
-        gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(triangle_indices), &triangle_indices, gl.STATIC_DRAW);
+        // gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
+        // gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(triangle_indices), &triangle_indices, gl.STATIC_DRAW);
     }
+
 
     for !sgl.isWindowShouldClose(g.sgl) {
         defer sgl.finishFrame(&g.sgl)
 
-        sgl.clearScreen(0.1, 0.3, 0.3, 1)
+        sgl.clearScreen(0.2, 0.3, 0.3, 1)
 
         sgl.useShader(simple_shader)
         green_value := f32(math.sin(sgl.getTime())) / 2 + 0.5
-        sgl.setUniform_Vec4(simple_shader, "u_color", {0, green_value, 0, 1})
+        sgl.setUniformVec4(simple_shader, "u_color", {0, green_value, 0, 1})
 
-        transform := linalg.identity(Mat4)
-        transform *= linalg.matrix4_translate_f32({0.5, -0.5, 0.0})
-        transform *= linalg.matrix4_rotate_f32(f32(sgl.getTime()), {0, 0, 1})
-        sgl.setUniform_Mat4(simple_shader, "transform", transform)
+        projection := sgl.makePerspectiveMat4(
+            45,
+            f32(sgl.getScreenWidth(&g.sgl)) / f32(sgl.getScreenHeight(&g.sgl)),
+            0.1,
+            100.0
+        );
+        view := sgl.makeTranslateMat4({ 0.0, 0.0, 3.0 });
 
-        sgl.setUniform_Texture2D(simple_shader, "texture1", container_tex, 0)
-        sgl.setUniform_Texture2D(simple_shader, "texture2", face_tex, 1)
+        sgl.setUniformTexture2D(simple_shader, "texture1", container_tex, 0)
+        sgl.setUniformTexture2D(simple_shader, "texture2", face_tex, 1)
 
         gl.BindVertexArray(vao)
-        gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
+        for pos, i in cube_positions {
+            angle := f32(i) * 20.0
+            model := sgl.makeTranslateMat4({pos.x, pos.y, -pos.z}) * sgl.makeRotationMat4(angle, {-1, -0.3, 0.5}) 
+            transform := projection * view * model
+            sgl.setUniformMat4(simple_shader, "transform", transform)
+            gl.DrawArrays(gl.TRIANGLES, 0, 36)
+        }
         gl.BindVertexArray(0)
     }
 }

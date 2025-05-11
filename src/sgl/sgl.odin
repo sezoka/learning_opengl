@@ -45,11 +45,32 @@ finishFrame :: proc(ctx: ^Context) {
     _pollEvents(ctx)
     _updateKeysState(ctx)
 
+    _clearZBuffer()
     free_all(tempAlly())
+}
+
+getScreenSize :: proc(ctx: ^Context) -> (u32, u32) {
+    width, height: i32
+    sdl.GetWindowSize(ctx.sdl.win, &width, &height)
+    return u32(width), u32(height)
+}
+
+getScreenWidth :: proc(ctx: ^Context) -> u32 {
+    width, _ := getScreenSize(ctx)
+    return u32(width)
+}
+
+getScreenHeight :: proc(ctx: ^Context) -> u32 {
+    _, height := getScreenSize(ctx)
+    return u32(height)
 }
 
 clearScreen :: proc(r, g, b, a: f32) {
     _clearScreenGL(r, g, b, a)
+}
+
+_clearZBuffer :: proc() {
+    _clearZBufferGL()
 }
 
 _swapWindow :: proc(ctx: ^Context) {
