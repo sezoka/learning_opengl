@@ -6,6 +6,7 @@ import "core:math/linalg"
 Vec3 :: [3]f32
 Vec4 :: [4]f32
 Mat4 :: matrix[4,4]f32
+Mat3 :: matrix[3,3]f32
 
 // maps objects in camera view onto 2d screen
 makePerspectiveMat4 :: #force_inline proc(

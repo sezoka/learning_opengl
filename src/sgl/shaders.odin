@@ -100,6 +100,11 @@ setUniformMat4 :: proc(s: Shader, name: cstring, v: Mat4) {
     gl.UniformMatrix4fv(gl.GetUniformLocation(s.id, name), 1, gl.FALSE, raw_data(mat_arr[:]))
 }
 
+setUniformMat3 :: proc(s: Shader, name: cstring, v: Mat3) {
+    mat_arr := linalg.matrix_flatten(v)
+    gl.UniformMatrix3fv(gl.GetUniformLocation(s.id, name), 1, gl.FALSE, raw_data(mat_arr[:]))
+}
+
 setUniformTexture2D :: proc(s: Shader, name: cstring, tex: Texture2D, unit: u32) {
     bindTexture2D(tex, unit)
     setUniformI32(s, name, i32(unit))
