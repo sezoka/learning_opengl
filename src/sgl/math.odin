@@ -61,6 +61,10 @@ makeLookAtMat4 :: proc(eye: Vec3, target: Vec3, up: Vec3) -> Mat4 {
 //     )
 // }
 
+makeScaleMat4 :: proc(v: Vec3) -> Mat4 {
+    return linalg.matrix4_scale_f32(v)
+}
+
 makeTranslateMat4 :: proc(v: Vec3) -> Mat4 {
     return {
         1, 0, 0, v.x, 

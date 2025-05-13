@@ -78,7 +78,7 @@ run :: proc() {
     g.sgl = sgl.init(800, 600, "learn opengl")
     defer sgl.deinit(&g.sgl)
 
-    simple_shader := sgl.loadShaderFromFile("./shaders/object_vert.glsl", "./shaders/object_frag.glsl")
+    object_shader := sgl.loadShaderFromFile("./shaders/object_vert.glsl", "./shaders/object_frag.glsl")
     light_shader := sgl.loadShaderFromFile("./shaders/light_vert.glsl", "./shaders/light_frag.glsl")
 
     // container_tex := sgl.loadTexture2D("./assets/container.jpg")
@@ -117,8 +117,8 @@ run :: proc() {
         fov = 45,
     )
 
-    box_color : Vec3 = {0.4, 0.4, 0.4}
-    light_color : Vec3 = {0.8, 1, 0.8}
+    // box_color : Vec3 = {0.4, 0.4, 0.4}
+    light_color : Vec3 = {0, 0, 0.1}
     light_pos : Vec3 = {0, 0, 5}
 
     for !sgl.isWindowShouldClose(g.sgl) {
@@ -128,14 +128,19 @@ run :: proc() {
         updateFPSCamera()
 
         // update simulation
-        light_color.r = f32(math.sin(sgl.getTime()) / 2 + 0.5)
-        background_color := light_color * 0.1
-        light_pos.z = f32(math.sin(sgl.getTime()) * 5)
-        light_pos.x = f32(math.cos(sgl.getTime()) * 5)
-        // light_pos = g.camera.base.pos
+        light_pos.z = f32(math.sin(sgl.getTime()) * 3)
+        light_pos.x = f32(math.cos(sgl.getTime()) * 3)
+
+        light_color.r = f32(math.sin(sgl.getTime() * 2))
+        light_color.g = f32(math.sin(sgl.getTime() * 0.7))
+        light_color.b = f32(math.sin(sgl.getTime() * 1.3))
+        diffuse_color := light_color * 0.5
+        ambient_color := diffuse_color * 0.2
+        specular_color := linalg.length(diffuse_color)
+
 
         // drawing
-        sgl.clearScreen(background_color.r, background_color.g, background_color.b, 1)
+        sgl.clearScreen(ambient_color.r, ambient_color.g, ambient_color.b, 1)
 
 
         projection := sgl.makePerspectiveMat4(
@@ -147,11 +152,17 @@ run :: proc() {
         view := sgl.makeViewMatrix(g.camera.base.pos, g.camera.base.front, g.camera.base.up);
         
         { // DRAW CUBES
-            sgl.useShader(simple_shader)
+            sgl.useShader(object_shader)
 
-            sgl.setUniformVec3(simple_shader, "light_color", light_color)
-            sgl.setUniformVec3(simple_shader, "light_pos", light_pos)
-            sgl.setUniformVec3(simple_shader, "object_color", box_color)
+            sgl.setUniformVec3(object_shader, "U_LIGHT.ambient", ambient_color)
+            sgl.setUniformVec3(object_shader, "U_LIGHT.diffuse", diffuse_color)
+            sgl.setUniformVec3(object_shader, "U_LIGHT.specular", specular_color)
+            sgl.setUniformVec3(object_shader, "U_LIGHT.position", light_pos)
+
+            sgl.setUniformVec3(object_shader, "U_MATERIAL.ambient", {1, 0.5, 0.31})
+            sgl.setUniformVec3(object_shader, "U_MATERIAL.diffuse", {1, 0.5, 0.31})
+            sgl.setUniformVec3(object_shader, "U_MATERIAL.specular", {0.5, 0.5, 0.5})
+            sgl.setUniformF32(object_shader, "U_MATERIAL.shininess", 32)
 
             gl.BindVertexArray(vao)
             for pos, i in cube_positions {
@@ -159,10 +170,10 @@ run :: proc() {
                 model := sgl.makeTranslateMat4({pos.x, pos.y, -pos.z}) * sgl.makeRotationMat4(angle, {-1, -0.3, 0.5}) 
                 transform := projection * view * model
                 normal_mat := Mat3(linalg.transpose(linalg.inverse(model)));  
-                sgl.setUniformMat4(simple_shader, "transform", transform)
-                sgl.setUniformMat4(simple_shader, "model", model)
-                sgl.setUniformMat3(simple_shader, "u_normal", normal_mat)
-                sgl.setUniformVec3(simple_shader, "u_view_pos", g.camera.base.pos)
+                sgl.setUniformMat4(object_shader, "transform", transform)
+                sgl.setUniformMat4(object_shader, "model", model)
+                sgl.setUniformMat3(object_shader, "u_normal", normal_mat)
+                sgl.setUniformVec3(object_shader, "u_view_pos", g.camera.base.pos)
                 gl.DrawArrays(gl.TRIANGLES, 0, 36)
             }
             gl.BindVertexArray(0)
@@ -170,7 +181,7 @@ run :: proc() {
 
         { // DRAW LIGHT
             sgl.useShader(light_shader)
-            model := sgl.makeTranslateMat4(light_pos) 
+            model := sgl.makeTranslateMat4(light_pos) * sgl.makeScaleMat4({0.3, 0.3, 0.3})
             transform := projection * view * model
             sgl.setUniformMat4(light_shader, "transform", transform)
             sgl.setUniformVec3(light_shader, "light_color", light_color)

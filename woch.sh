@@ -1,3 +1,3 @@
 #!/usr/bin/sh
 
-woch src -- bash ./build.sh
+woch src -- bash ./build

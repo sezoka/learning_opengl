@@ -95,6 +95,10 @@ setUniformU32 :: proc(s: Shader, name: cstring, v: u32) {
     gl.Uniform1ui(gl.GetUniformLocation(s.id, name), v)
 }
 
+setUniformF32 :: proc(s: Shader, name: cstring, v: f32) {
+    gl.Uniform1f(gl.GetUniformLocation(s.id, name), v)
+}
+
 setUniformMat4 :: proc(s: Shader, name: cstring, v: Mat4) {
     mat_arr := linalg.matrix_flatten(v)
     gl.UniformMatrix4fv(gl.GetUniformLocation(s.id, name), 1, gl.FALSE, raw_data(mat_arr[:]))
