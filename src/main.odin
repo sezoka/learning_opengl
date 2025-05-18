@@ -61,6 +61,13 @@ cube_verts := [?]f32 {
     -0.5,  0.5, -0.5,  0.0,  1.0,  0.0,  0.0, 1.0
 }
 
+point_light_positions := [?]Vec3 {
+    {0.7,  0.2,  -2.0},
+    {2.3, -3.3, 4.0},
+    {-4.0,  2.0, 12.0},
+    {0.0,  0.0, 3.0}
+}
+
 cube_positions := [?]Vec3 {
     { 0.0,  0.0,  0.0 }, 
     { 2.0,  5.0, -15.0 }, 
@@ -120,9 +127,8 @@ run :: proc() {
         fov = 45,
     )
 
-    // box_color : Vec3 = {0.4, 0.4, 0.4}
-    light_color : Vec3 = {1, 1, 1}
-    light_pos : Vec3 = {0, 0, 5}
+    sgl.enableVSync()
+
 
     for !sgl.isWindowShouldClose(g.sgl) {
         defer sgl.finishFrame(&g.sgl)
@@ -137,14 +143,13 @@ run :: proc() {
         // light_color.r = f32(math.sin(sgl.getTime() * 2))
         // light_color.g = f32(math.sin(sgl.getTime() * 0.7))
         // light_color.b = f32(math.sin(sgl.getTime() * 1.3))
+        light_color : Vec3 = {0.8, 0.5, 0.6}
         diffuse_color := light_color * 1
         ambient_color := diffuse_color * 0.1
         specular_color := linalg.length(diffuse_color)
 
-
         // drawing
-        sgl.clearScreen(ambient_color.r, ambient_color.g, ambient_color.b, 1)
-
+        sgl.clearScreen(0.05, 0.05, 0.05, 1)
 
         projection := sgl.makePerspectiveMat4(
             g.camera.base.fov,
@@ -168,6 +173,17 @@ run :: proc() {
             sgl.setUniformF32(object_shader, "U_LIGHT.linear", 0.09)
             sgl.setUniformF32(object_shader, "U_LIGHT.quadratic", 0.032)
 
+            for light_pos, i in point_light_positions {
+                sgl.setUniformVec3(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].position", i), light_pos)
+                sgl.setUniformVec3(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].direction", i), g.camera.base.front)
+                sgl.setUniformVec3(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].ambient", i), ambient_color)
+                sgl.setUniformVec3(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].diffuse", i), diffuse_color)
+                sgl.setUniformVec3(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].specular", i), specular_color)
+                sgl.setUniformF32(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].constant", i), 1.0)
+                sgl.setUniformF32(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].linear", i), 0.09)
+                sgl.setUniformF32(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].quadratic", i), 0.032)
+            }
+
             sgl.setUniformTexture2D(object_shader, "U_MATERIAL.diffuse", container_tex, 0)
             sgl.setUniformTexture2D(object_shader, "U_MATERIAL.specular", container_specular_tex, 1)
             sgl.setUniformF32(object_shader, "U_MATERIAL.shininess", 32)
@@ -187,15 +203,17 @@ run :: proc() {
             gl.BindVertexArray(0)
         }
 
-        { // DRAW LIGHT
+        { // DRAW LIGHTS
             sgl.useShader(light_shader)
-            model := sgl.makeTranslateMat4(light_pos) * sgl.makeScaleMat4({0.3, 0.3, 0.3})
-            transform := projection * view * model
-            sgl.setUniformMat4(light_shader, "transform", transform)
-            sgl.setUniformVec3(light_shader, "light_color", light_color)
-            gl.BindVertexArray(vao)
-            gl.DrawArrays(gl.TRIANGLES, 0, 36)
-            gl.BindVertexArray(0)
+            for light_pos in point_light_positions {
+                model := sgl.makeTranslateMat4(light_pos) * sgl.makeScaleMat4({0.3, 0.3, 0.3})
+                transform := projection * view * model
+                sgl.setUniformMat4(light_shader, "transform", transform)
+                sgl.setUniformVec3(light_shader, "light_color", light_color)
+                gl.BindVertexArray(vao)
+                gl.DrawArrays(gl.TRIANGLES, 0, 36)
+                gl.BindVertexArray(0)
+            }
         }
     }
 }

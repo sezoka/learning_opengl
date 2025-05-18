@@ -241,3 +241,7 @@ setRelativeMouseMode :: proc(c: Context, on: bool) {
         log.errorf("sdl: SetWindowRelativeMouseMode returned false: %s", sdl.GetError())
     }
 }
+
+randomF32 :: proc() -> f32 {
+    return sdl.randf()
+}
