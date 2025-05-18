@@ -4,6 +4,7 @@ import os "core:os/os2"
 import "core:strings"
 import stbi "vendor:stb/image"
 import "core:image"
+import "core:fmt"
 import "base:runtime"
 import "core:slice"
 
@@ -16,16 +17,19 @@ Image :: struct {
 }
 
 ImageFormat :: enum {
-    RGB,
-    RGBA,
+    R8,
+    RGB8,
+    RGBA8,
 }
 
 getFormatFromChannels :: proc(channels: i32) -> ImageFormat {
     switch channels {
+    case 1:
+        return .R8
     case 3:
-        return .RGB
+        return .RGB8
     case 4:
-        return .RGBA
+        return .RGBA8
     }
     panic("unhandled")
 }
@@ -52,6 +56,8 @@ loadImage :: proc(img_path: string, flip := true, allocator := context.allocator
     stbi.set_flip_vertically_on_load(0)
     assert(img != nil)
     defer stbi.image_free(img)
+
+    fmt.println(channels)
 
     return {
         data = slice.clone(img[0:width * height * channels]),

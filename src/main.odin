@@ -18,47 +18,47 @@ Game :: struct {
 g : Game
 
 cube_verts := [?]f32 {
-    -0.5, -0.5, -0.5,  0.0,  0.0, -1.0,
-     0.5, -0.5, -0.5,  0.0,  0.0, -1.0, 
-     0.5,  0.5, -0.5,  0.0,  0.0, -1.0, 
-     0.5,  0.5, -0.5,  0.0,  0.0, -1.0, 
-    -0.5,  0.5, -0.5,  0.0,  0.0, -1.0, 
-    -0.5, -0.5, -0.5,  0.0,  0.0, -1.0, 
+    -0.5, -0.5, -0.5,  0.0,  0.0, -1.0,  0.0, 0.0,
+     0.5, -0.5, -0.5,  0.0,  0.0, -1.0,  1.0, 0.0,
+     0.5,  0.5, -0.5,  0.0,  0.0, -1.0,  1.0, 1.0,
+     0.5,  0.5, -0.5,  0.0,  0.0, -1.0,  1.0, 1.0,
+    -0.5,  0.5, -0.5,  0.0,  0.0, -1.0,  0.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0,  0.0, -1.0,  0.0, 0.0,
 
-    -0.5, -0.5,  0.5,  0.0,  0.0, 1.0,
-     0.5, -0.5,  0.5,  0.0,  0.0, 1.0,
-     0.5,  0.5,  0.5,  0.0,  0.0, 1.0,
-     0.5,  0.5,  0.5,  0.0,  0.0, 1.0,
-    -0.5,  0.5,  0.5,  0.0,  0.0, 1.0,
-    -0.5, -0.5,  0.5,  0.0,  0.0, 1.0,
+    -0.5, -0.5,  0.5,  0.0,  0.0, 1.0,   0.0, 0.0,
+     0.5, -0.5,  0.5,  0.0,  0.0, 1.0,   1.0, 0.0,
+     0.5,  0.5,  0.5,  0.0,  0.0, 1.0,   1.0, 1.0,
+     0.5,  0.5,  0.5,  0.0,  0.0, 1.0,   1.0, 1.0,
+    -0.5,  0.5,  0.5,  0.0,  0.0, 1.0,   0.0, 1.0,
+    -0.5, -0.5,  0.5,  0.0,  0.0, 1.0,   0.0, 0.0,
 
-    -0.5,  0.5,  0.5, -1.0,  0.0,  0.0,
-    -0.5,  0.5, -0.5, -1.0,  0.0,  0.0,
-    -0.5, -0.5, -0.5, -1.0,  0.0,  0.0,
-    -0.5, -0.5, -0.5, -1.0,  0.0,  0.0,
-    -0.5, -0.5,  0.5, -1.0,  0.0,  0.0,
-    -0.5,  0.5,  0.5, -1.0,  0.0,  0.0,
+    -0.5,  0.5,  0.5, -1.0,  0.0,  0.0,  1.0, 0.0,
+    -0.5,  0.5, -0.5, -1.0,  0.0,  0.0,  1.0, 1.0,
+    -0.5, -0.5, -0.5, -1.0,  0.0,  0.0,  0.0, 1.0,
+    -0.5, -0.5, -0.5, -1.0,  0.0,  0.0,  0.0, 1.0,
+    -0.5, -0.5,  0.5, -1.0,  0.0,  0.0,  0.0, 0.0,
+    -0.5,  0.5,  0.5, -1.0,  0.0,  0.0,  1.0, 0.0,
 
-     0.5,  0.5,  0.5,  1.0,  0.0,  0.0,
-     0.5,  0.5, -0.5,  1.0,  0.0,  0.0,
-     0.5, -0.5, -0.5,  1.0,  0.0,  0.0,
-     0.5, -0.5, -0.5,  1.0,  0.0,  0.0,
-     0.5, -0.5,  0.5,  1.0,  0.0,  0.0,
-     0.5,  0.5,  0.5,  1.0,  0.0,  0.0,
+     0.5,  0.5,  0.5,  1.0,  0.0,  0.0,  1.0, 0.0,
+     0.5,  0.5, -0.5,  1.0,  0.0,  0.0,  1.0, 1.0,
+     0.5, -0.5, -0.5,  1.0,  0.0,  0.0,  0.0, 1.0,
+     0.5, -0.5, -0.5,  1.0,  0.0,  0.0,  0.0, 1.0,
+     0.5, -0.5,  0.5,  1.0,  0.0,  0.0,  0.0, 0.0,
+     0.5,  0.5,  0.5,  1.0,  0.0,  0.0,  1.0, 0.0,
 
-    -0.5, -0.5, -0.5,  0.0, -1.0,  0.0,
-     0.5, -0.5, -0.5,  0.0, -1.0,  0.0,
-     0.5, -0.5,  0.5,  0.0, -1.0,  0.0,
-     0.5, -0.5,  0.5,  0.0, -1.0,  0.0,
-    -0.5, -0.5,  0.5,  0.0, -1.0,  0.0,
-    -0.5, -0.5, -0.5,  0.0, -1.0,  0.0,
+    -0.5, -0.5, -0.5,  0.0, -1.0,  0.0,  0.0, 1.0,
+     0.5, -0.5, -0.5,  0.0, -1.0,  0.0,  1.0, 1.0,
+     0.5, -0.5,  0.5,  0.0, -1.0,  0.0,  1.0, 0.0,
+     0.5, -0.5,  0.5,  0.0, -1.0,  0.0,  1.0, 0.0,
+    -0.5, -0.5,  0.5,  0.0, -1.0,  0.0,  0.0, 0.0,
+    -0.5, -0.5, -0.5,  0.0, -1.0,  0.0,  0.0, 1.0,
 
-    -0.5,  0.5, -0.5,  0.0,  1.0,  0.0,
-     0.5,  0.5, -0.5,  0.0,  1.0,  0.0,
-     0.5,  0.5,  0.5,  0.0,  1.0,  0.0,
-     0.5,  0.5,  0.5,  0.0,  1.0,  0.0,
-    -0.5,  0.5,  0.5,  0.0,  1.0,  0.0,
-    -0.5,  0.5, -0.5,  0.0,  1.0,  0.0
+    -0.5,  0.5, -0.5,  0.0,  1.0,  0.0,  0.0, 1.0,
+     0.5,  0.5, -0.5,  0.0,  1.0,  0.0,  1.0, 1.0,
+     0.5,  0.5,  0.5,  0.0,  1.0,  0.0,  1.0, 0.0,
+     0.5,  0.5,  0.5,  0.0,  1.0,  0.0,  1.0, 0.0,
+    -0.5,  0.5,  0.5,  0.0,  1.0,  0.0,  0.0, 0.0,
+    -0.5,  0.5, -0.5,  0.0,  1.0,  0.0,  0.0, 1.0
 }
 
 cube_positions := [?]Vec3 {
@@ -75,18 +75,19 @@ cube_positions := [?]Vec3 {
 }
  
 run :: proc() {
-    g.sgl = sgl.init(800, 600, "learn opengl")
+    g.sgl = sgl.init(1280, 720, "learn opengl")
     defer sgl.deinit(&g.sgl)
 
     object_shader := sgl.loadShaderFromFile("./shaders/object_vert.glsl", "./shaders/object_frag.glsl")
     light_shader := sgl.loadShaderFromFile("./shaders/light_vert.glsl", "./shaders/light_frag.glsl")
 
-    // container_tex := sgl.loadTexture2D("./assets/container.jpg")
+    container_tex := sgl.loadTexture2D("./assets/doomdoor.jpg")
+    container_specular_tex := sgl.loadTexture2D("./assets/doomdoor_specular.jpg")
     // face_tex := sgl.loadTexture2D("./assets/awesomeface.png")
 
     vbo: u32
     vao: u32
-    cube_stride : i32 = 6 * size_of(f32)
+    cube_stride : i32 = 8 * size_of(f32)
     // ebo: u32
     { // CUBE INIT
         gl.GenBuffers(1, &vbo)
@@ -100,6 +101,8 @@ run :: proc() {
         gl.EnableVertexAttribArray(0)  
         gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, cube_stride, 3 * size_of(f32))
         gl.EnableVertexAttribArray(1)
+        gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, cube_stride, 6 * size_of(f32))
+        gl.EnableVertexAttribArray(2)
     }
 
     light_vao: u32
@@ -118,7 +121,7 @@ run :: proc() {
     )
 
     // box_color : Vec3 = {0.4, 0.4, 0.4}
-    light_color : Vec3 = {0, 0, 0.1}
+    light_color : Vec3 = {1, 1, 1}
     light_pos : Vec3 = {0, 0, 5}
 
     for !sgl.isWindowShouldClose(g.sgl) {
@@ -128,14 +131,14 @@ run :: proc() {
         updateFPSCamera()
 
         // update simulation
-        light_pos.z = f32(math.sin(sgl.getTime()) * 3)
-        light_pos.x = f32(math.cos(sgl.getTime()) * 3)
+        // light_pos.z = f32(math.sin(sgl.getTime()) * 3)
+        // light_pos.x = f32(math.cos(sgl.getTime()) * 3)
 
-        light_color.r = f32(math.sin(sgl.getTime() * 2))
-        light_color.g = f32(math.sin(sgl.getTime() * 0.7))
-        light_color.b = f32(math.sin(sgl.getTime() * 1.3))
-        diffuse_color := light_color * 0.5
-        ambient_color := diffuse_color * 0.2
+        // light_color.r = f32(math.sin(sgl.getTime() * 2))
+        // light_color.g = f32(math.sin(sgl.getTime() * 0.7))
+        // light_color.b = f32(math.sin(sgl.getTime() * 1.3))
+        diffuse_color := light_color * 1
+        ambient_color := diffuse_color * 0.1
         specular_color := linalg.length(diffuse_color)
 
 
@@ -154,14 +157,19 @@ run :: proc() {
         { // DRAW CUBES
             sgl.useShader(object_shader)
 
+            sgl.setUniformVec3(object_shader, "U_LIGHT.position", g.camera.base.pos)
+            sgl.setUniformVec3(object_shader, "U_LIGHT.direction", g.camera.base.front)
             sgl.setUniformVec3(object_shader, "U_LIGHT.ambient", ambient_color)
             sgl.setUniformVec3(object_shader, "U_LIGHT.diffuse", diffuse_color)
             sgl.setUniformVec3(object_shader, "U_LIGHT.specular", specular_color)
-            sgl.setUniformVec3(object_shader, "U_LIGHT.position", light_pos)
+            sgl.setUniformF32(object_shader, "U_LIGHT.cut_off", math.cos(math.to_radians_f32(12.5)))
+            sgl.setUniformF32(object_shader, "U_LIGHT.outer_cut_off", math.cos(math.to_radians_f32(15)))
+            sgl.setUniformF32(object_shader, "U_LIGHT.constant", 1.0)
+            sgl.setUniformF32(object_shader, "U_LIGHT.linear", 0.09)
+            sgl.setUniformF32(object_shader, "U_LIGHT.quadratic", 0.032)
 
-            sgl.setUniformVec3(object_shader, "U_MATERIAL.ambient", {1, 0.5, 0.31})
-            sgl.setUniformVec3(object_shader, "U_MATERIAL.diffuse", {1, 0.5, 0.31})
-            sgl.setUniformVec3(object_shader, "U_MATERIAL.specular", {0.5, 0.5, 0.5})
+            sgl.setUniformTexture2D(object_shader, "U_MATERIAL.diffuse", container_tex, 0)
+            sgl.setUniformTexture2D(object_shader, "U_MATERIAL.specular", container_specular_tex, 1)
             sgl.setUniformF32(object_shader, "U_MATERIAL.shininess", 32)
 
             gl.BindVertexArray(vao)

@@ -14,9 +14,11 @@ bindTexture2D :: proc(tex: Texture2D, unit: u32) {
 
 _myImgFormatToGLImgFormat :: proc(imf: ImageFormat) -> i32 {
     switch (imf) {
-    case .RGB:
+    case .R8:
+        return gl.RED
+    case .RGB8:
         return gl.RGB
-    case .RGBA:
+    case .RGBA8:
         return gl.RGBA
     }
     unreachable()
@@ -38,13 +40,11 @@ makeTexture2D :: proc(img: Image) -> (tex: Texture2D) {
         raw_data(img.data)
     );
 
-    min_texture_filter :: gl.NEAREST
+    min_texture_filter :: gl.NEAREST_MIPMAP_LINEAR
     mag_texture_filter :: gl.NEAREST
 
     gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, min_texture_filter);
     gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, mag_texture_filter);
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.GenerateMipmap(gl.TEXTURE_2D);
 
     tex.format = tex.format

@@ -79,6 +79,10 @@ _updateMouseState :: proc(c: ^Context) {
     c.mouse.buttons = sdl.GetRelativeMouseState(&c.mouse.x_delta, &c.mouse.y_delta)
 }
 
+setWindowResizable :: proc(c: Context, on: bool) {
+    sdl.SetWindowResizable(c.sdl.win, on)
+}
+
 getDelta :: proc(c: Context) -> f32 {
     return c.dt
 }
