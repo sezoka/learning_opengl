@@ -82,15 +82,26 @@ cube_positions := [?]Vec3 {
 }
  
 run :: proc() {
+    // _ = sgl.loadModel("./assets/survival_guitar_backpack.glb")
+    model : Model
+    ai_load_gltf_model(&model, "./assets/survival_guitar_backpack.glb")
+
+    fmt.println(model)
+    when true {
+        return
+    }
+
     g.sgl = sgl.init(1280, 720, "learn opengl")
     defer sgl.deinit(&g.sgl)
 
     object_shader := sgl.loadShaderFromFile("./shaders/object_vert.glsl", "./shaders/object_frag.glsl")
     light_shader := sgl.loadShaderFromFile("./shaders/light_vert.glsl", "./shaders/light_frag.glsl")
 
-    container_tex := sgl.loadTexture2D("./assets/doomdoor.jpg")
-    container_specular_tex := sgl.loadTexture2D("./assets/doomdoor_specular.jpg")
+    container_tex := sgl.loadTexture2D("./assets/doomdoor.jpg", "diffuse")
+    container_specular_tex := sgl.loadTexture2D("./assets/doomdoor_specular.jpg", "specular")
     // face_tex := sgl.loadTexture2D("./assets/awesomeface.png")
+
+    // fmt.println(backpack.meshes)
 
     vbo: u32
     vao: u32
@@ -143,7 +154,7 @@ run :: proc() {
         // light_color.r = f32(math.sin(sgl.getTime() * 2))
         // light_color.g = f32(math.sin(sgl.getTime() * 0.7))
         // light_color.b = f32(math.sin(sgl.getTime() * 1.3))
-        light_color : Vec3 = {0.8, 0.5, 0.6}
+        light_color : Vec3 = {1, 1, 1}
         diffuse_color := light_color * 1
         ambient_color := diffuse_color * 0.1
         specular_color := linalg.length(diffuse_color)

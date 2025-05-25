@@ -42,3 +42,32 @@ _enableVSyncGL :: proc() {
 _disableVSyncGL :: proc() {
     sdl.GL_SetSwapInterval(0)
 }
+
+_initMeshGL :: proc(m: ^Mesh) {
+    gl.GenVertexArrays(1, &m.vao)
+    gl.GenBuffers(1, &m.vbo)
+    gl.GenBuffers(1, &m.ebo)
+
+    gl.BindVertexArray(m.vao); defer gl.BindVertexArray(0)
+
+    gl.BindBuffer(gl.ARRAY_BUFFER, m.vbo)
+    gl.BufferData(gl.ARRAY_BUFFER, len(m.vertices) * size_of(m.vertices[0]), &m.vertices[0], gl.STATIC_DRAW)
+
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ebo)
+    gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(m.indices) * size_of(m.indices[0]), &m.indices[0], gl.STATIC_DRAW)
+
+    // position
+    gl.EnableVertexAttribArray(0)
+    gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(Vertex), 0)
+    // normal
+    gl.EnableVertexAttribArray(1)
+    gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, size_of(Vertex), offset_of(Vertex, normal))
+    // uv
+    gl.EnableVertexAttribArray(2)
+    gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, size_of(Vertex), offset_of(Vertex, uv))
+}
+
+_drawMeshGL :: proc(m: Mesh) {
+    gl.BindVertexArray(m.vao); defer gl.BindVertexArray(0)
+    gl.DrawElements(gl.TRIANGLES, i32(len(m.indices)), gl.UNSIGNED_INT, nil)
+}

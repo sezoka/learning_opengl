@@ -9,12 +9,20 @@ import "base:runtime"
 OPENGL_MAJOR_VER :: 4
 OPENGL_MINOR_VER :: 4
 
+Backend :: enum {
+    Software,
+    OpenGL,
+}
+
+BackendSet :: bit_set[Backend];
+
 Context :: struct {
     sdl: SDLStuff,
     is_running: bool,
     prev_frame_time: f64,
     dt: f32,
     mouse: Mouse,
+    backend: BackendSet
 }
 
 SDLStuff :: struct {
@@ -38,15 +46,26 @@ MouseBtn :: enum {
     X2,
 }
 
+InitOptions :: struct {
+    backend: BackendSet
+}
+
+DEFAULT_INIT_OPTIONS : InitOptions : {
+    backend = { .OpenGL }
+}
+
 @(require_results)
-init :: proc(width, height: u32, title: string) -> Context {
+init :: proc(width, height: u32, title: string, options := DEFAULT_INIT_OPTIONS) -> Context {
     c : Context
     _initSDL(&c.sdl, width, height, title)
-    _initGL(width, height)
+    if .OpenGL in options.backend {
+        _initGL(width, height)
+    }
     enableRelativeMouseMode(c)
     c.is_running = true
     c.prev_frame_time = getTime()
     c.dt = 0.016
+    c.backend = options.backend
     return c
 }
 

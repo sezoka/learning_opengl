@@ -5,6 +5,7 @@ import gl "vendor:OpenGL"
 Texture2D :: struct {
     id: u32,
     format: ImageFormat,
+    name: cstring,
 }
 
 bindTexture2D :: proc(tex: Texture2D, unit: u32) {
@@ -25,7 +26,7 @@ _myImgFormatToGLImgFormat :: proc(imf: ImageFormat) -> i32 {
     return 0;
 }
 
-makeTexture2D :: proc(img: Image) -> (tex: Texture2D) {
+makeTexture2D :: proc(img: Image, name: cstring) -> (tex: Texture2D) {
     gl.GenTextures(1, &tex.id)
     bindTexture2D(tex, 0)
     gl.TexImage2D(
@@ -48,10 +49,11 @@ makeTexture2D :: proc(img: Image) -> (tex: Texture2D) {
     gl.GenerateMipmap(gl.TEXTURE_2D);
 
     tex.format = tex.format
+    tex.name = name
     return tex
 }
 
-loadTexture2D :: proc(path: string) -> Texture2D {
+loadTexture2D :: proc(path: string, name: cstring) -> Texture2D {
     img := loadImage(path); defer deleteImage(&img)
-    return makeTexture2D(img)
+    return makeTexture2D(img, name)
 }
