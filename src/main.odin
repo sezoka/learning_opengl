@@ -9,8 +9,6 @@ import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
-ODIN_DEBUG :: true
-
 Game :: struct {
     camera: sgl.FPSCamera,
     sgl: sgl.Context,
@@ -82,17 +80,13 @@ cube_positions := [?]Vec3 {
 }
  
 run :: proc() {
-    // _ = sgl.loadModel("./assets/survival_guitar_backpack.glb")
-    model : Model
-    ai_load_gltf_model(&model, "./assets/survival_guitar_backpack.glb")
-
-    fmt.println(model)
-    when true {
-        return
-    }
-
-    g.sgl = sgl.init(1280, 720, "learn opengl")
+    init_options := sgl.DEFAULT_INIT_OPTIONS
+    init_options.target_fps = 30
+    g.sgl = sgl.init(1280, 720, "learn opengl", init_options)
     defer sgl.deinit(&g.sgl)
+
+    model := sgl.loadModel("./assets/survival_guitar_backpack.glb"); defer sgl.destroyModel(&model)
+    fmt.println(model)
 
     object_shader := sgl.loadShaderFromFile("./shaders/object_vert.glsl", "./shaders/object_frag.glsl")
     light_shader := sgl.loadShaderFromFile("./shaders/light_vert.glsl", "./shaders/light_frag.glsl")
@@ -135,11 +129,8 @@ run :: proc() {
     g.camera = sgl.makeFPSCamera(
         sgl.getScreenWidth(g.sgl),
         sgl.getScreenHeight(g.sgl),
-        fov = 45,
+        fov = 90,
     )
-
-    sgl.enableVSync()
-
 
     for !sgl.isWindowShouldClose(g.sgl) {
         defer sgl.finishFrame(&g.sgl)
@@ -160,7 +151,7 @@ run :: proc() {
         specular_color := linalg.length(diffuse_color)
 
         // drawing
-        sgl.clearScreen(0.05, 0.05, 0.05, 1)
+        sgl.clearScreen(g.sgl, 0.05, 0.05, 0.05, 1)
 
         projection := sgl.makePerspectiveMat4(
             g.camera.base.fov,
@@ -250,21 +241,21 @@ main :: proc() {
 
 		defer {
 			if len(track.allocation_map) > 0 {
-				log.errorf("=== %v allocations not freed: ===\n", len(track.allocation_map))
+				fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
 				for _, entry in track.allocation_map {
-					log.errorf("- %v bytes @ %v\n", entry.size, entry.location)
+					fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
 				}
 			}
 			if len(track.bad_free_array) > 0 {
-				log.errorf("=== %v incorrect frees: ===\n", len(track.bad_free_array))
+				fmt.eprintf("=== %v incorrect frees: ===\n", len(track.bad_free_array))
 				for entry in track.bad_free_array {
-					log.errorf("- %p @ %v\n", entry.memory, entry.location)
+					fmt.eprintf("- %p @ %v\n", entry.memory, entry.location)
 				}
 			}
 			mem.tracking_allocator_destroy(&track)
 		}
 	}
-    context.logger = log.create_console_logger()
+    context.logger = log.create_console_logger(); defer log.destroy_console_logger(context.logger)
 
     run()
 }

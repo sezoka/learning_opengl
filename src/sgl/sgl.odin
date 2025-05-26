@@ -2,6 +2,7 @@ package sgl
 
 import sdl "vendor:sdl3"
 import "core:log"
+import "core:fmt"
 import "core:os"
 import "core:strings"
 import "base:runtime"
@@ -14,22 +15,24 @@ Backend :: enum {
     OpenGL,
 }
 
-BackendSet :: bit_set[Backend];
-
 Context :: struct {
     sdl: SDLStuff,
     is_running: bool,
-    prev_frame_time: f64,
+    prev_frame_time_ms: u64,
     dt: f32,
     mouse: Mouse,
-    backend: BackendSet
+    backend: Backend,
+    target_fps: int,
 }
 
 SDLStuff :: struct {
     win: ^sdl.Window,
-    glcontext: ^sdl.GLContextState,
     keys: [1024]bool,
     mouse_btn_mask: u32,
+
+    glcontext: ^sdl.GLContextState,
+
+    renderer: ^sdl.Renderer,
 }
 
 Mouse :: struct {
@@ -47,25 +50,33 @@ MouseBtn :: enum {
 }
 
 InitOptions :: struct {
-    backend: BackendSet
+    backend: Backend,
+    target_fps: int,
 }
 
 DEFAULT_INIT_OPTIONS : InitOptions : {
-    backend = { .OpenGL }
+    backend = .OpenGL,
+    target_fps = 60,
 }
 
 @(require_results)
 init :: proc(width, height: u32, title: string, options := DEFAULT_INIT_OPTIONS) -> Context {
     c : Context
     _initSDL(&c.sdl, width, height, title)
-    if .OpenGL in options.backend {
+
+    switch options.backend {
+    case .OpenGL:
         _initGL(width, height)
+    case .Software:
+        c.sdl.renderer = sdl.CreateRenderer(c.sdl.win, nil)
     }
+
     enableRelativeMouseMode(c)
     c.is_running = true
-    c.prev_frame_time = getTime()
+    c.prev_frame_time_ms = getTimeMs()
     c.dt = 0.016
     c.backend = options.backend
+    c.target_fps = options.target_fps
     return c
 }
 
@@ -83,15 +94,21 @@ finishFrame :: proc(c: ^Context) {
     free_all(tempAlly())
 
     // start of new frame
-    curr_time := getTime()
-    c.dt = f32(curr_time - c.prev_frame_time)
-    c.prev_frame_time = curr_time
+    curr_time_ms := getTimeMs()
+    frame_delta_ms := curr_time_ms - c.prev_frame_time_ms
+    sleep_time := (1000 / f32(c.target_fps)) - f32(frame_delta_ms)
+    if 0 < sleep_time {
+        sdl.Delay(u32(sleep_time))
+    }
+    curr_time_ms = getTimeMs()
+    c.dt = f32(curr_time_ms - c.prev_frame_time_ms) / 1000
+    c.prev_frame_time_ms = curr_time_ms
 
     _pollEvents(c)
     _updateKeysState(c)
     _updateMouseState(c)
 
-    _clearZBuffer()
+    _clearZBuffer(c^)
 }
 
 _updateMouseState :: proc(c: ^Context) {
@@ -122,16 +139,31 @@ getScreenHeight :: proc(c: Context) -> u32 {
     return u32(height)
 }
 
-clearScreen :: proc(r, g, b, a: f32) {
-    _clearScreenGL(r, g, b, a)
+clearScreen :: proc(c: Context, r, g, b, a: f32) {
+    switch c.backend {
+    case .OpenGL: 
+        _clearScreen_GL(r, g, b, a)
+    case .Software:
+        sdl.SetRenderDrawColor(c.sdl.renderer, u8(r * 255), u8(g * 255), u8(b * 255), u8(a * 255));
+        sdl.RenderClear(c.sdl.renderer)
+    }
 }
 
-_clearZBuffer :: proc() {
-    _clearZBufferGL()
+_clearZBuffer :: proc(c: Context) {
+    switch c.backend {
+    case .OpenGL:
+        _clearZBuffer_GL()
+    case .Software:
+    }
 }
 
 _swapWindow :: proc(c: ^Context) {
-    sdl.GL_SwapWindow(c.sdl.win)
+    switch c.backend {
+    case .OpenGL: 
+        sdl.GL_SwapWindow(c.sdl.win)
+    case .Software:
+        sdl.RenderPresent(c.sdl.renderer)
+    }
 }
 
 _updateKeysState :: proc(c: ^Context) {
@@ -159,15 +191,15 @@ _pollEvents :: proc(c: ^Context) {
 }
 
 enableWireframeMode :: proc() {
-    _enableWireframeModeGL()
+    _enableWireframeMode_GL()
 }
 
 disableWireframeMode :: proc() {
-    _disableWireframeModeGL()
+    _disableWireframeMode_GL()
 }
 
 _updateViewportSize :: proc(width, height: u32) {
-    _updateViewportSizeGL(width, height)
+    _updateViewportSize_GL(width, height)
 }
 
 isWindowShouldClose :: proc(c: Context) -> bool {
@@ -202,17 +234,17 @@ _initSDL :: proc(c: ^SDLStuff, width, height: u32, title: string) -> bool {
         return false
     }
     sdl.GL_MakeCurrent(c.win, c.glcontext)
-    enableVSync()
+    // enableVSync()
 
     return true
 }
 
 enableVSync :: proc() {
-    _enableVSyncGL()
+    _enableVSync_GL()
 }
 
 disableVSync :: proc() {
-    _disableVSyncGL()
+    _disableVSync_GL()
 }
 
 _deinitSDL :: proc(c: ^Context) {

@@ -14,36 +14,36 @@ _initGL :: proc(width, height: u32) -> bool {
     return true
 }
 
-_updateViewportSizeGL :: proc(width, height: u32) {
+_updateViewportSize_GL :: proc(width, height: u32) {
     gl.Viewport(0, 0, i32(width), i32(height));
 }
 
-_clearScreenGL :: proc(r, g, b, a: f32) {
+_clearScreen_GL :: proc(r, g, b, a: f32) {
     gl.ClearColor(r, g, b, a);
     gl.Clear(gl.COLOR_BUFFER_BIT);
 }
 
-_enableWireframeModeGL :: proc() {
+_enableWireframeMode_GL :: proc() {
     gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 }
 
-_disableWireframeModeGL :: proc() {
+_disableWireframeMode_GL :: proc() {
     gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 }
 
-_clearZBufferGL :: proc() {
+_clearZBuffer_GL :: proc() {
     gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }
 
-_enableVSyncGL :: proc() {
+_enableVSync_GL :: proc() {
     sdl.GL_SetSwapInterval(1)
 }
 
-_disableVSyncGL :: proc() {
+_disableVSync_GL :: proc() {
     sdl.GL_SetSwapInterval(0)
 }
 
-_initMeshGL :: proc(m: ^Mesh) {
+_initMesh_GL :: proc(m: ^Mesh) {
     gl.GenVertexArrays(1, &m.vao)
     gl.GenBuffers(1, &m.vbo)
     gl.GenBuffers(1, &m.ebo)
@@ -67,7 +67,7 @@ _initMeshGL :: proc(m: ^Mesh) {
     gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, size_of(Vertex), offset_of(Vertex, uv))
 }
 
-_drawMeshGL :: proc(m: Mesh) {
+_drawMesh_GL :: proc(m: Mesh) {
     gl.BindVertexArray(m.vao); defer gl.BindVertexArray(0)
     gl.DrawElements(gl.TRIANGLES, i32(len(m.indices)), gl.UNSIGNED_INT, nil)
 }
