@@ -81,7 +81,7 @@ cube_positions := [?]Vec3 {
  
 run :: proc() {
     init_options := sgl.DEFAULT_INIT_OPTIONS
-    init_options.target_fps = 30
+    init_options.target_fps = 60
     g.sgl = sgl.init(1280, 720, "learn opengl", init_options)
     defer sgl.deinit(&g.sgl)
 
@@ -127,8 +127,7 @@ run :: proc() {
     }
 
     g.camera = sgl.makeFPSCamera(
-        sgl.getScreenWidth(g.sgl),
-        sgl.getScreenHeight(g.sgl),
+        &g.sgl,
         fov = 90,
     )
 
@@ -151,7 +150,7 @@ run :: proc() {
         specular_color := linalg.length(diffuse_color)
 
         // drawing
-        sgl.clearScreen(g.sgl, 0.05, 0.05, 0.05, 1)
+        sgl.clearScreen(g.sgl, {0.05, 0.05, 0.05, 1})
 
         projection := sgl.makePerspectiveMat4(
             g.camera.base.fov,
@@ -222,18 +221,21 @@ run :: proc() {
 
 updateFPSCamera :: proc() {
     dir : sgl.Direction3DSet
-    if sgl.isButtonDown(g.sgl, .W) do dir += { .Forward }
-    if sgl.isButtonDown(g.sgl, .S) do dir += { .Backward }
-    if sgl.isButtonDown(g.sgl, .A) do dir += { .Left }
-    if sgl.isButtonDown(g.sgl, .D) do dir += { .Right }
-    if sgl.isButtonDown(g.sgl, .SPACE) do dir += { .Up }
-    if sgl.isButtonDown(g.sgl, .LSHIFT) do dir += { .Down }
+    if sgl.isKeyDown(g.sgl, .W) do dir += { .Forward }
+    if sgl.isKeyDown(g.sgl, .S) do dir += { .Backward }
+    if sgl.isKeyDown(g.sgl, .A) do dir += { .Left }
+    if sgl.isKeyDown(g.sgl, .D) do dir += { .Right }
+    if sgl.isKeyDown(g.sgl, .SPACE) do dir += { .Up }
+    if sgl.isKeyDown(g.sgl, .LSHIFT) do dir += { .Down }
     sgl.updateFPSCameraPosition(&g.camera, sgl.getDelta(g.sgl), dir)
     sgl.updateFPSCameraRotation(&g.camera, sgl.getMouseDeltaX(g.sgl), sgl.getMouseDeltaY(g.sgl))
     sgl.updateFPSCamera(&g.camera)
 }
 
 main :: proc() {
+    // sgl.testSerialize()
+    // when true do return;
+
 	when ODIN_DEBUG {
 		track: mem.Tracking_Allocator
 		mem.tracking_allocator_init(&track, context.allocator)

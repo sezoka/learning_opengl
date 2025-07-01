@@ -28,12 +28,11 @@ Camera :: struct {
     up:           Vec3,
     near_frustum: f32,
     far_frustum:  f32,
-    viewport_w:   f32,
-    viewport_h:   f32,
     right:          Vec3,
     world_up:       Vec3,
     yaw:            f32,
     pitch:          f32,
+    ctx: ^Context,
 }
 
 updateFPSCameraPosition :: proc(
@@ -100,8 +99,7 @@ FPSCamera :: struct {
 }
 
 makeFPSCamera :: proc(
-    viewport_w: u32,
-    viewport_h: u32,
+    ctx: ^Context,
     pos := Vec3{0, 0, 0},
     world_up := Vec3{0, 1, 0},
     yaw := DEFAULT_YAW,
@@ -122,11 +120,28 @@ makeFPSCamera :: proc(
             fov          = fov,
             near_frustum = near_frustum,
             far_frustum  = far_frustum,
-            viewport_w   = f32(viewport_w),
-            viewport_h   = f32(viewport_h),
+            ctx = ctx,
         },
         mouse_sens   = mouse_sensitivity,
     }
     updateFPSCamera(&camera)
     return camera
+}
+
+updateFPSCameraDefault :: proc(camera: ^FPSCamera) {
+    ctx := camera.base.ctx^
+    dir : Direction3DSet
+    if isKeyDown(ctx, .W) do dir += { .Forward }
+    if isKeyDown(ctx, .S) do dir += { .Backward }
+    if isKeyDown(ctx, .A) do dir += { .Left }
+    if isKeyDown(ctx, .D) do dir += { .Right }
+    if isKeyDown(ctx, .SPACE) do dir += { .Up }
+    if isKeyDown(ctx, .LSHIFT) do dir += { .Down }
+    updateFPSCameraPosition(camera, getDelta(ctx), dir)
+    updateFPSCameraRotation(camera, getMouseDeltaX(ctx), getMouseDeltaY(ctx))
+    updateFPSCamera(camera)
+}
+
+makeViewMatrixForCamera :: proc(camera: Camera) -> Mat4 {
+    return makeViewMatrix(camera.pos, camera.front, camera.up)
 }
