@@ -68,7 +68,7 @@ point_light_positions := [?]Vec3 {
 
 cube_positions := [?]Vec3 {
     { 0.0,  0.0,  0.0 }, 
-    { 2.0,  5.0, -15.0 }, 
+    {0.4, 0, 0}, 
     {-1.5, -2.2, -2.5 },  
     {-3.8, -2.0, -12.3 },  
     { 2.4, -0.4, -3.5 },  
@@ -85,17 +85,21 @@ run :: proc() {
     g.sgl = sgl.init(1280, 720, "learn opengl", init_options)
     defer sgl.deinit(&g.sgl)
 
-    model := sgl.loadModel("./assets/survival_guitar_backpack.glb"); defer sgl.destroyModel(&model)
-    fmt.println(model)
+    model := sgl.loadModel_obj(context.allocator, "./assets/obj/slayer/slayer_left.obj"); defer sgl.destroyModel(&model)
+    // fmt.println(model)
 
     object_shader := sgl.loadShaderFromFile("./shaders/object_vert.glsl", "./shaders/object_frag.glsl")
     light_shader := sgl.loadShaderFromFile("./shaders/light_vert.glsl", "./shaders/light_frag.glsl")
+    skybox_shader := sgl.loadShaderFromFile("./shaders/skybox_vert.glsl", "./shaders/skybox_frag.glsl")
 
-    container_tex := sgl.loadTexture2D("./assets/doomdoor.jpg", "diffuse")
-    container_specular_tex := sgl.loadTexture2D("./assets/doomdoor_specular.jpg", "specular")
-    // face_tex := sgl.loadTexture2D("./assets/awesomeface.png")
-
-    // fmt.println(backpack.meshes)
+    skybox_tex := sgl.loadCubeMap({
+        "./assets/skybox/right.jpg",
+        "./assets/skybox/left.jpg",
+        "./assets/skybox/top.jpg",
+        "./assets/skybox/bottom.jpg",
+        "./assets/skybox/front.jpg",
+        "./assets/skybox/back.jpg"
+    })
 
     vbo: u32
     vao: u32
@@ -109,12 +113,12 @@ run :: proc() {
         gl.BufferData(gl.ARRAY_BUFFER, size_of(cube_verts), &cube_verts, gl.STATIC_DRAW)
 
         gl.BindVertexArray(vao);
-        gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, cube_stride, 0);
         gl.EnableVertexAttribArray(0)  
-        gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, cube_stride, 3 * size_of(f32))
+        gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, cube_stride, 0);
         gl.EnableVertexAttribArray(1)
-        gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, cube_stride, 6 * size_of(f32))
+        gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, cube_stride, 3 * size_of(f32))
         gl.EnableVertexAttribArray(2)
+        gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, cube_stride, 6 * size_of(f32))
     }
 
     light_vao: u32
@@ -126,10 +130,23 @@ run :: proc() {
         gl.EnableVertexAttribArray(0)  
     }
 
+    skybox_vbo: u32
+    skybox_vao: u32
+    { // SKYBOX INIT
+        skybox_vbo = sgl.gl_makeBuffer()
+        skybox_vao= sgl.gl_makeVAO()
+        sgl.gl_bindVAO(skybox_vao); defer sgl.gl_bindVAO(0)
+        sgl.gl_setVBOData(skybox_vbo, sgl.skybox_vertices[:], .StaticDraw)
+        gl.EnableVertexAttribArray(0)
+        gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 3 * size_of(f32), 0);
+    }
+
     g.camera = sgl.makeFPSCamera(
         &g.sgl,
         fov = 90,
     )
+
+    model_rot : f32 = 0
 
     for !sgl.isWindowShouldClose(g.sgl) {
         defer sgl.finishFrame(&g.sgl)
@@ -146,7 +163,7 @@ run :: proc() {
         // light_color.b = f32(math.sin(sgl.getTime() * 1.3))
         light_color : Vec3 = {1, 1, 1}
         diffuse_color := light_color * 1
-        ambient_color := diffuse_color * 0.1
+        ambient_color := diffuse_color * 0.5
         specular_color := linalg.length(diffuse_color)
 
         // drawing
@@ -157,51 +174,102 @@ run :: proc() {
             f32(sgl.getScreenWidth(g.sgl)) / f32(sgl.getScreenHeight(g.sgl)),
             g.camera.base.near_frustum,
             g.camera.base.far_frustum,
+            false,
         );
         view := sgl.makeViewMatrix(g.camera.base.pos, g.camera.base.front, g.camera.base.up);
-        
+
+        { // DRAW SKYBOX
+            // sgl.gl_disableFaceCulling(); 
+            sgl.gl_disableDepthTest()
+            sgl.gl_bindVAO(skybox_vao); defer sgl.gl_bindVAO(0)
+
+            sgl.useShader(skybox_shader)
+            sgl.setUniformMat4(skybox_shader, "view_projection", projection * sgl.Mat4(sgl.Mat3(view)))
+            sgl.setUniformInt(skybox_shader, "skybox", 0)
+
+            gl.ActiveTexture(gl.TEXTURE0)
+            gl.BindTexture(gl.TEXTURE_CUBE_MAP, skybox_tex.id)
+            // sgl.enableCubeMap(skybox_tex, 0)
+
+            gl.DrawArrays(gl.TRIANGLES, 0, 36)
+            sgl.gl_enableDepthTest()
+            // sgl.gl_enableFaceCulling(); 
+        }
+
+  
         { // DRAW CUBES
             sgl.useShader(object_shader)
 
-            sgl.setUniformVec3(object_shader, "U_LIGHT.position", g.camera.base.pos)
-            sgl.setUniformVec3(object_shader, "U_LIGHT.direction", g.camera.base.front)
-            sgl.setUniformVec3(object_shader, "U_LIGHT.ambient", ambient_color)
-            sgl.setUniformVec3(object_shader, "U_LIGHT.diffuse", diffuse_color)
-            sgl.setUniformVec3(object_shader, "U_LIGHT.specular", specular_color)
-            sgl.setUniformF32(object_shader, "U_LIGHT.cut_off", math.cos(math.to_radians_f32(12.5)))
-            sgl.setUniformF32(object_shader, "U_LIGHT.outer_cut_off", math.cos(math.to_radians_f32(15)))
-            sgl.setUniformF32(object_shader, "U_LIGHT.constant", 1.0)
-            sgl.setUniformF32(object_shader, "U_LIGHT.linear", 0.09)
-            sgl.setUniformF32(object_shader, "U_LIGHT.quadratic", 0.032)
+            setSpotLightUniforms(object_shader, {
+                position = g.camera.base.pos,
+                direction = g.camera.base.front,
+                ambient = ambient_color,
+                diffuse = diffuse_color,
+                specular = specular_color,
+                cut_off = math.cos(math.to_radians_f32(12.5)),
+                outer_cut_off = math.cos(math.to_radians_f32(15)),
+                constant = 1.0,
+                linear = 0.09,
+                quadratic = 0.032,
+            })
 
             for light_pos, i in point_light_positions {
-                sgl.setUniformVec3(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].position", i), light_pos)
-                sgl.setUniformVec3(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].direction", i), g.camera.base.front)
-                sgl.setUniformVec3(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].ambient", i), ambient_color)
-                sgl.setUniformVec3(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].diffuse", i), diffuse_color)
-                sgl.setUniformVec3(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].specular", i), specular_color)
-                sgl.setUniformF32(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].constant", i), 1.0)
-                sgl.setUniformF32(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].linear", i), 0.09)
-                sgl.setUniformF32(object_shader, fmt.ctprintf("U_POINT_LIGHTS[%d].quadratic", i), 0.032)
+                setPointLightsUniform(object_shader, i, {
+                    position = light_pos,
+                    direction = g.camera.base.front,
+                    ambient = ambient_color,
+                    diffuse = diffuse_color,
+                    specular = specular_color,
+                    constant = 1.0,
+                    linear = 0.09,
+                    quadratic = 0.032,
+                })
             }
 
-            sgl.setUniformTexture2D(object_shader, "U_MATERIAL.diffuse", container_tex, 0)
-            sgl.setUniformTexture2D(object_shader, "U_MATERIAL.specular", container_specular_tex, 1)
-            sgl.setUniformF32(object_shader, "U_MATERIAL.shininess", 32)
+            setMaterialPropsUniform(object_shader, {
+                diffuse_tex = {},
+                specular_tex = {},
+                shininess = 50
+            })
 
-            gl.BindVertexArray(vao)
-            for pos, i in cube_positions {
-                angle := f32(i) * 20.0
-                model := sgl.makeTranslateMat4({pos.x, pos.y, -pos.z}) * sgl.makeRotationMat4(angle, {-1, -0.3, 0.5}) 
-                transform := projection * view * model
-                normal_mat := Mat3(linalg.transpose(linalg.inverse(model)));  
+            // gl.BindVertexArray(vao)
+            // for pos, _ in cube_positions {
+            //     // angle := f32(i) * 20.0
+            //     model := sgl.makeTranslateMat4({pos.x, pos.y, -pos.z}) * sgl.makeRotationMat4(0, {-1, -0.3, 0.5}) 
+            //     transform := projection * view * model
+            //     normal_mat := Mat3(linalg.transpose(linalg.inverse(model)));  
+            //     sgl.setUniformMat4(object_shader, "transform", transform)
+            //     sgl.setUniformMat4(object_shader, "model", model)
+            //     sgl.setUniformMat3(object_shader, "u_normal", normal_mat)
+            //     sgl.setUniformVec3(object_shader, "u_view_pos", g.camera.base.pos)
+            //     gl.DrawArrays(gl.TRIANGLES, 0, 36)
+            // }
+            // gl.BindVertexArray(0)
+
+            {
+                // sgl.setUniformTexture2D(object_shader, "U_MATERIAL.specular", {}, 0)
+                model_mat := sgl.makeTranslateMat4({0, 0, 0}) * sgl.makeRotationMat4(10, {1, 0, 0})
+                model_rot += sgl.getDelta(g.sgl) * 10
+                transform := projection * view * model_mat
+                normal_mat := Mat3(linalg.transpose(linalg.inverse(model_mat)));  
                 sgl.setUniformMat4(object_shader, "transform", transform)
-                sgl.setUniformMat4(object_shader, "model", model)
+                sgl.setUniformMat4(object_shader, "model", model_mat)
                 sgl.setUniformMat3(object_shader, "u_normal", normal_mat)
                 sgl.setUniformVec3(object_shader, "u_view_pos", g.camera.base.pos)
-                gl.DrawArrays(gl.TRIANGLES, 0, 36)
+
+                sgl.drawModel(model, object_shader)
+
+                model_mat = sgl.makeTranslateMat4({1, 0, 1})
+                model_rot += sgl.getDelta(g.sgl) * 10
+                transform = projection * view * model_mat
+                normal_mat = Mat3(linalg.transpose(linalg.inverse(model_mat)));  
+                sgl.setUniformMat4(object_shader, "transform", transform)
+                sgl.setUniformMat4(object_shader, "model", model_mat)
+                sgl.setUniformMat3(object_shader, "u_normal", normal_mat)
+                sgl.setUniformVec3(object_shader, "u_view_pos", g.camera.base.pos)
+
+                sgl.drawModel(model, object_shader)
             }
-            gl.BindVertexArray(0)
         }
 
         { // DRAW LIGHTS
@@ -212,11 +280,70 @@ run :: proc() {
                 sgl.setUniformMat4(light_shader, "transform", transform)
                 sgl.setUniformVec3(light_shader, "light_color", light_color)
                 gl.BindVertexArray(vao)
-                gl.DrawArrays(gl.TRIANGLES, 0, 36)
+                // gl.DrawArrays(gl.TRIANGLES, 0, 36)
                 gl.BindVertexArray(0)
             }
         }
     }
+}
+
+MaterialProps :: struct {
+    diffuse_tex: sgl.Texture2D,
+    specular_tex: sgl.Texture2D,
+    shininess: f32,
+}
+
+setMaterialPropsUniform :: proc(shader: sgl.Shader, mat: MaterialProps) {
+    sgl.setUniformTexture2D(shader, "U_MATERIAL.diffuse", mat.diffuse_tex, 0)
+    sgl.setUniformTexture2D(shader, "U_MATERIAL.specular", mat.specular_tex, 1)
+    sgl.setUniformFloat(shader, "U_MATERIAL.shininess", mat.shininess)
+}
+
+PointLight :: struct {
+    position,
+    ambient,
+    diffuse,
+    specular: Vec3,
+    constant,
+    linear,
+    quadratic: f32,
+}
+
+setPointLightsUniform :: proc(shader: sgl.Shader, i: int, light: SpotLight) {
+    sgl.setUniformVec3(shader, fmt.ctprintf("U_POINT_LIGHTS[%d].position", i), light.position)
+    sgl.setUniformVec3(shader, fmt.ctprintf("U_POINT_LIGHTS[%d].direction", i), light.direction)
+    sgl.setUniformVec3(shader, fmt.ctprintf("U_POINT_LIGHTS[%d].ambient", i), light.ambient)
+    sgl.setUniformVec3(shader, fmt.ctprintf("U_POINT_LIGHTS[%d].diffuse", i), light.diffuse)
+    sgl.setUniformVec3(shader, fmt.ctprintf("U_POINT_LIGHTS[%d].specular", i), light.specular)
+    sgl.setUniformFloat(shader, fmt.ctprintf("U_POINT_LIGHTS[%d].constant", i), light.constant)
+    sgl.setUniformFloat(shader, fmt.ctprintf("U_POINT_LIGHTS[%d].linear", i), light.linear)
+    sgl.setUniformFloat(shader, fmt.ctprintf("U_POINT_LIGHTS[%d].quadratic", i), light.quadratic)
+}
+
+SpotLight :: struct {
+    position,
+    direction,
+    ambient,
+    diffuse,
+    specular: Vec3,
+    cut_off,
+    outer_cut_off,
+    constant,
+    linear,
+    quadratic: f32,
+}
+
+setSpotLightUniforms :: proc(shader: sgl.Shader, light: SpotLight) {
+    sgl.setUniformVec3(shader, "U_LIGHT.position", light.position)
+    sgl.setUniformVec3(shader, "U_LIGHT.direction", light.direction)
+    sgl.setUniformVec3(shader, "U_LIGHT.ambient", light.ambient)
+    sgl.setUniformVec3(shader, "U_LIGHT.diffuse", light.diffuse)
+    sgl.setUniformVec3(shader, "U_LIGHT.specular", light.specular)
+    sgl.setUniformFloat(shader, "U_LIGHT.cut_off", light.cut_off)
+    sgl.setUniformFloat(shader, "U_LIGHT.outer_cut_off", light.outer_cut_off)
+    sgl.setUniformFloat(shader, "U_LIGHT.constant", light.constant)
+    sgl.setUniformFloat(shader, "U_LIGHT.linear", light.linear)
+    sgl.setUniformFloat(shader, "U_LIGHT.quadratic", light.quadratic)
 }
 
 updateFPSCamera :: proc() {

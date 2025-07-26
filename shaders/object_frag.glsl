@@ -160,12 +160,17 @@ vec3 pointLight(PointLight light, Material material, vec3 world_pos, vec3 camera
 
 void main()
 {
+    // FragColor = vec4(vec3(gl_FragCoord.z), 1.0);
+    // FragColor = vec4(v_normal, 1);
+    // return;
+
     // FragColor = defaultLight(U_LIGHT, U_MATERIAL, v_world_pos, u_view_pos, v_normal, v_uv);
     vec3 point_lights;
     for (int i = 0; i < POINT_LIGHTS_NUM; i += 1) {
         point_lights += pointLight(U_POINT_LIGHTS[i], U_MATERIAL, v_world_pos, u_view_pos, v_normal, v_uv);
     }
-    FragColor = vec4(spotLight(U_LIGHT, U_MATERIAL, v_world_pos, u_view_pos, v_normal, v_uv) + point_lights, 1);
+    // vec3 spot = spotLight(U_LIGHT, U_MATERIAL, v_world_pos, u_view_pos, v_normal, v_uv);
+    FragColor = vec4(point_lights, 1);
 // vec4 spotLight(SpotLight light, Material material, vec3 world_pos, vec3 camera_pos, vec3 normal, vec2 uv) {
     // directionalLight(light, material, v_world_pos, u_view_pos, v_normal, v_uv);
 }

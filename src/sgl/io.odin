@@ -1,7 +1,8 @@
 package sgl
 
-import os "core:os/os2"
+import "core:os/os2"
 import "core:strings"
+import "core:log"
 import stbi "vendor:stb/image"
 import "core:image"
 import "core:fmt"
@@ -35,12 +36,12 @@ getFormatFromChannels :: proc(channels: i32) -> ImageFormat {
 }
 
 @(require_results)
-loadImage :: proc(img_path: string, flip := true, allocator := context.allocator) -> Image {
-    img_bytes, err := os.read_entire_file_from_path(
-        img_path,
+loadImage :: proc(ally: Allocator, img_path: string, flip := true) -> Image {
+    img_bytes, ok := readEntireFile(
         tempAlly(),
+        img_path,
     )
-    assert(err == nil)
+    assert(ok)
 
     width, height, channels: i32
 
@@ -57,10 +58,8 @@ loadImage :: proc(img_path: string, flip := true, allocator := context.allocator
     assert(img != nil)
     defer stbi.image_free(img)
 
-    fmt.println(channels)
-
     return {
-        data = slice.clone(img[0:width * height * channels]),
+        data = slice.clone(img[0:width * height * channels], allocator=ally),
         width = width,
         height = height,
         channels = channels,
@@ -71,4 +70,14 @@ loadImage :: proc(img_path: string, flip := true, allocator := context.allocator
 deleteImage :: proc(img: ^Image) {
     delete(img.data)
     img.data = nil
+}
+
+@(require_results)
+readEntireFile :: proc(ally: Allocator, path: string) -> ([]byte, bool) {
+    file_bytes, err := os2.read_entire_file_from_path(path, allocator = ally)
+    if err != nil {
+        log.errorf("failed to read file '%s', error: '%v'", path, err)
+        return {}, false
+    }
+    return file_bytes, true
 }

@@ -7,20 +7,21 @@ import sdl "vendor:sdl3"
 _initGL :: proc(ctx: ^Context, width, height: u32) -> bool {
     gl.load_up_to(OPENGL_MAJOR_VER, OPENGL_MINOR_VER, sdl.gl_set_proc_address)
 
-    gl.Viewport(0, 0, i32(width), i32(height));
-    gl.Enable(gl.BLEND);
+    _updateViewportSize_GL(width, height)
+    gl_enableDepthTest()
     gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    gl.Enable(gl.DEPTH_TEST);  
+    gl_enableFaceCulling()
+    _disableVSync_GL()
 
-    {
-        ctx.gl.rect_vbo = gl_makeBuffer()
-        ctx.gl.rect_ebo = gl_makeBuffer()
-        ctx.gl.rect_vao = gl_makeVAO()
-        gl_bindVAO(ctx.gl.rect_vao); defer gl_bindVAO(0)
-
-        gl_setVBOData(ctx.gl.rect_vbo, _gl_rect_vertices[:], .StaticDraw)
-        gl_setEBOData(ctx.gl.rect_ebo, _gl_rect_indices[:], .StaticDraw)
-    }
+    // {
+    //     ctx.gl.rect_vbo = gl_makeBuffer()
+    //     ctx.gl.rect_ebo = gl_makeBuffer()
+    //     ctx.gl.rect_vao = gl_makeVAO()
+    //     gl_bindVAO(ctx.gl.rect_vao); defer gl_bindVAO(0)
+    //
+    //     gl_setVBOData(ctx.gl.rect_vbo, _gl_rect_vertices[:], .StaticDraw)
+    //     gl_setEBOData(ctx.gl.rect_ebo, _gl_rect_indices[:], .StaticDraw)
+    // }
 
     return true
 }
@@ -51,6 +52,22 @@ GLType :: enum(c.int) {
 //     assert(0 < idx)
 // }
 
+gl_enableFaceCulling :: proc() {
+    gl.Enable(gl.CULL_FACE)
+}
+
+gl_disableFaceCulling :: proc() {
+    gl.Disable(gl.CULL_FACE)
+}
+
+gl_enableDepthTest :: proc() {
+    gl.Enable(gl.DEPTH_TEST)
+}
+
+gl_disableDepthTest :: proc() {
+    gl.Disable(gl.DEPTH_TEST)
+}
+
 gl_bindVAO :: proc(vao: u32) {
     gl.BindVertexArray(vao)
 }
@@ -79,14 +96,14 @@ GL_BufferUsageKind :: enum(u32) {
     StreamCopy = gl.STREAM_COPY,
 }
 
-gl_setVBOData :: proc(vbo: u32, vertices: []f32, usage: GL_BufferUsageKind) {
+gl_setVBOData :: proc(vbo: u32, data: []$T, usage: GL_BufferUsageKind) {
     gl.BindBuffer(gl.ARRAY_BUFFER, vbo);
-    gl.BufferData(gl.ARRAY_BUFFER, len(vertices) * size_of(f32), raw_data(vertices), u32(usage));
+    gl.BufferData(gl.ARRAY_BUFFER, len(data) * size_of(T), raw_data(data), u32(usage));
 }
 
-gl_setEBOData :: proc(vbo: u32, indices: []i32, usage: GL_BufferUsageKind) {
-    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbo);
-    gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices) * size_of(i32), raw_data(indices), u32(usage));
+gl_setEBOData :: proc(ebo: u32, indices: []$T, usage: GL_BufferUsageKind) {
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
+    gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices) * size_of(T), raw_data(indices), u32(usage));
 }
 
 _updateViewportSize_GL :: proc(width, height: u32) {
@@ -107,7 +124,7 @@ _disableWireframeMode_GL :: proc() {
 }
 
 _clearZBuffer_GL :: proc() {
-    gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    gl.Clear(gl.DEPTH_BUFFER_BIT)
 }
 
 _enableVSync_GL :: proc() {
@@ -125,11 +142,11 @@ _initMesh_GL :: proc(m: ^Mesh) {
 
     gl.BindVertexArray(m.vao); defer gl.BindVertexArray(0)
 
-    gl.BindBuffer(gl.ARRAY_BUFFER, m.vbo)
-    gl.BufferData(gl.ARRAY_BUFFER, len(m.vertices) * size_of(m.vertices[0]), &m.vertices[0], gl.STATIC_DRAW)
+    gl_setVBOData(m.vbo, m.vertices, .StaticDraw)
 
-    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ebo)
-    gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(m.indices) * size_of(m.indices[0]), &m.indices[0], gl.STATIC_DRAW)
+    gl_setEBOData(m.ebo, m.indices, .StaticDraw)
+    // gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ebo)
+    // gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(m.indices) * size_of(m.indices[0]), &m.indices[0], gl.STATIC_DRAW)
 
     // position
     gl.EnableVertexAttribArray(0)
@@ -146,3 +163,17 @@ _drawMesh_GL :: proc(m: Mesh) {
     gl.BindVertexArray(m.vao); defer gl.BindVertexArray(0)
     gl.DrawElements(gl.TRIANGLES, i32(len(m.indices)), gl.UNSIGNED_INT, nil)
 }
+
+setImageData_gl :: proc(target: u32, img: Image) {
+    gl.TexImage2D(
+        target,
+        0,
+        _myImgFormatToGLImgFormat(img.format),
+        img.width,
+        img.height,
+        0,
+        u32(_myImgFormatToGLImgFormat(img.format)),
+        gl.UNSIGNED_BYTE,
+        raw_data(img.data)
+    );
+} 

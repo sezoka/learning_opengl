@@ -116,9 +116,11 @@ finishFrame :: proc(c: ^Context) {
     // start of new frame
     curr_time_ms := getTimeMs()
     frame_delta_ms := curr_time_ms - c.prev_frame_time_ms
-    sleep_time := (1000 / f32(c.target_fps)) - f32(frame_delta_ms)
-    if 0 < sleep_time {
-        sdl.Delay(u32(sleep_time))
+    if 0 <= c.target_fps {
+        sleep_time := (1000 / f32(c.target_fps)) - f32(frame_delta_ms)
+        if 0 < sleep_time {
+            sdl.Delay(u32(sleep_time))
+        }
     }
     curr_time_ms = getTimeMs()
     c.dt = f32(curr_time_ms - c.prev_frame_time_ms) / 1000
@@ -359,4 +361,8 @@ drawRect :: proc(c: Context, rect: Rect, color: Color) {
 
 _setSDLColor :: proc(c: Context, color: Color) {
     sdl.SetRenderDrawColor(c.sdl.renderer, u8(color.r * 255), u8(color.g * 255), u8(color.b * 255), u8(color.a * 255));
+}
+
+setTargetFPS :: proc(ctx: ^Context, fps: int) {
+    ctx.target_fps = fps
 }

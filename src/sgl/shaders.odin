@@ -5,6 +5,7 @@ import gl "vendor:OpenGL"
 import "core:log"
 import "core:math/linalg"
 import "core:strings"
+import "core:c"
 
 Shader :: struct {
     id: u32,
@@ -15,10 +16,10 @@ useShader :: proc(s: Shader) {
 }
 
 loadShaderFromFile :: proc(vert_path, frag_path: string) -> Shader {
-    vert, vert_err := os.read_entire_file_from_path(vert_path, tempAlly())
-    assert(vert_err == nil)
-    fragment, frag_err := os.read_entire_file_from_path(frag_path, tempAlly())
-    assert(frag_err == nil)
+    vert, vert_read_ok := readEntireFile(tempAlly(), vert_path)
+    assert(vert_read_ok)
+    fragment, frag_read_ok := readEntireFile(tempAlly(), frag_path)
+    assert(frag_read_ok)
     shader, ok := compileShaderProgram(string(vert), string(fragment))
     assert(ok)
     return shader
@@ -87,15 +88,15 @@ setUniformVec3 :: proc(s: Shader, name: cstring, v: Vec3) {
     gl.Uniform3f(gl.GetUniformLocation(s.id, name), v.x, v.y, v.z)
 }
 
-setUniformI32 :: proc(s: Shader, name: cstring, v: i32) {
+setUniformInt :: proc(s: Shader, name: cstring, v: c.int) {
     gl.Uniform1i(gl.GetUniformLocation(s.id, name), v)
 }
 
-setUniformU32 :: proc(s: Shader, name: cstring, v: u32) {
+setUniformUInt :: proc(s: Shader, name: cstring, v: c.uint) {
     gl.Uniform1ui(gl.GetUniformLocation(s.id, name), v)
 }
 
-setUniformF32 :: proc(s: Shader, name: cstring, v: f32) {
+setUniformFloat :: proc(s: Shader, name: cstring, v: c.float) {
     gl.Uniform1f(gl.GetUniformLocation(s.id, name), v)
 }
 
@@ -110,8 +111,8 @@ setUniformMat3 :: proc(s: Shader, name: cstring, v: Mat3) {
 }
 
 setUniformTexture2D :: proc(s: Shader, name: cstring, tex: Texture2D, unit: u32) {
-    bindTexture2D(tex, unit)
-    setUniformI32(s, name, i32(unit))
+    enableTexture2D(tex, unit)
+    setUniformInt(s, name, i32(unit))
 }
 
 //
