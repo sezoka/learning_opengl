@@ -82,8 +82,8 @@ cube_positions := [?]Vec3 {
 run :: proc() {
     init_options := sgl.DEFAULT_INIT_OPTIONS
     init_options.target_fps = 60
-    g.sgl = sgl.init(1280, 720, "learn opengl", init_options)
-    defer sgl.deinit(&g.sgl)
+    sgl.init(&g.sgl, 1280, 720, "learn opengl", init_options)
+    defer sgl.deinit()
 
     model := sgl.loadModel_obj(context.allocator, "./assets/obj/slayer/slayer_left.obj"); defer sgl.destroyModel(&model)
     // fmt.println(model)
@@ -101,18 +101,17 @@ run :: proc() {
         "./assets/skybox/back.jpg"
     })
 
-    vbo: u32
-    vao: u32
+    vbo: sgl.GL_BufferId
+    vao: sgl.GL_VaoId
     cube_stride : i32 = 8 * size_of(f32)
     // ebo: u32
     { // CUBE INIT
-        gl.GenBuffers(1, &vbo)
-        gl.GenVertexArrays(1, &vao)
+        vbo = sgl.makeBuffer_gl()
+        vao := sgl.makeVAO_gl()
 
-        gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-        gl.BufferData(gl.ARRAY_BUFFER, size_of(cube_verts), &cube_verts, gl.STATIC_DRAW)
+        sgl.setVBOData_gl(vbo, cube_verts[:], .StaticDraw)
 
-        gl.BindVertexArray(vao);
+        sgl.bindVAO_gl(vao);
         gl.EnableVertexAttribArray(0)  
         gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, cube_stride, 0);
         gl.EnableVertexAttribArray(1)
@@ -130,26 +129,23 @@ run :: proc() {
         gl.EnableVertexAttribArray(0)  
     }
 
-    skybox_vbo: u32
-    skybox_vao: u32
+    skybox_vbo: sgl.GL_BufferId
+    skybox_vao: sgl.GL_VaoId
     { // SKYBOX INIT
-        skybox_vbo = sgl.gl_makeBuffer()
-        skybox_vao= sgl.gl_makeVAO()
-        sgl.gl_bindVAO(skybox_vao); defer sgl.gl_bindVAO(0)
-        sgl.gl_setVBOData(skybox_vbo, sgl.skybox_vertices[:], .StaticDraw)
+        skybox_vbo = sgl.makeBuffer_gl()
+        skybox_vao= sgl.makeVAO_gl()
+        sgl.bindVAO_gl(skybox_vao); defer sgl.bindVAO_gl(0)
+        sgl.setVBOData_gl(skybox_vbo, sgl.gl_skybox_vertices[:], .StaticDraw)
         gl.EnableVertexAttribArray(0)
         gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 3 * size_of(f32), 0);
     }
 
-    g.camera = sgl.makeFPSCamera(
-        &g.sgl,
-        fov = 90,
-    )
+    g.camera = sgl.makeFPSCamera(fov = 90)
 
     model_rot : f32 = 0
 
-    for !sgl.isWindowShouldClose(g.sgl) {
-        defer sgl.finishFrame(&g.sgl)
+    for !sgl.isWindowShouldClose() {
+        defer sgl.finishFrame()
 
         // input handling
         updateFPSCamera()
@@ -167,11 +163,11 @@ run :: proc() {
         specular_color := linalg.length(diffuse_color)
 
         // drawing
-        sgl.clearScreen(g.sgl, {0.05, 0.05, 0.05, 1})
+        sgl.clearBackground({0.05, 0.05, 0.05, 1})
 
         projection := sgl.makePerspectiveMat4(
             g.camera.base.fov,
-            f32(sgl.getScreenWidth(g.sgl)) / f32(sgl.getScreenHeight(g.sgl)),
+            f32(sgl.getScreenWidth()) / f32(sgl.getScreenHeight()),
             g.camera.base.near_frustum,
             g.camera.base.far_frustum,
             false,
@@ -181,7 +177,7 @@ run :: proc() {
         { // DRAW SKYBOX
             // sgl.gl_disableFaceCulling(); 
             sgl.gl_disableDepthTest()
-            sgl.gl_bindVAO(skybox_vao); defer sgl.gl_bindVAO(0)
+            sgl.bindVAO_gl(skybox_vao); defer sgl.bindVAO_gl(0)
 
             sgl.useShader(skybox_shader)
             sgl.setUniformMat4(skybox_shader, "view_projection", projection * sgl.Mat4(sgl.Mat3(view)))
@@ -249,7 +245,7 @@ run :: proc() {
             {
                 // sgl.setUniformTexture2D(object_shader, "U_MATERIAL.specular", {}, 0)
                 model_mat := sgl.makeTranslateMat4({0, 0, 0}) * sgl.makeRotationMat4(10, {1, 0, 0})
-                model_rot += sgl.getDelta(g.sgl) * 10
+                model_rot += sgl.getDelta() * 10
                 transform := projection * view * model_mat
                 normal_mat := Mat3(linalg.transpose(linalg.inverse(model_mat)));  
                 sgl.setUniformMat4(object_shader, "transform", transform)
@@ -260,7 +256,7 @@ run :: proc() {
                 sgl.drawModel(model, object_shader)
 
                 model_mat = sgl.makeTranslateMat4({1, 0, 1})
-                model_rot += sgl.getDelta(g.sgl) * 10
+                model_rot += sgl.getDelta() * 10
                 transform = projection * view * model_mat
                 normal_mat = Mat3(linalg.transpose(linalg.inverse(model_mat)));  
                 sgl.setUniformMat4(object_shader, "transform", transform)
@@ -279,7 +275,7 @@ run :: proc() {
                 transform := projection * view * model
                 sgl.setUniformMat4(light_shader, "transform", transform)
                 sgl.setUniformVec3(light_shader, "light_color", light_color)
-                gl.BindVertexArray(vao)
+                sgl.bindVAO_gl(vao)
                 // gl.DrawArrays(gl.TRIANGLES, 0, 36)
                 gl.BindVertexArray(0)
             }
@@ -348,14 +344,14 @@ setSpotLightUniforms :: proc(shader: sgl.Shader, light: SpotLight) {
 
 updateFPSCamera :: proc() {
     dir : sgl.Direction3DSet
-    if sgl.isKeyDown(g.sgl, .W) do dir += { .Forward }
-    if sgl.isKeyDown(g.sgl, .S) do dir += { .Backward }
-    if sgl.isKeyDown(g.sgl, .A) do dir += { .Left }
-    if sgl.isKeyDown(g.sgl, .D) do dir += { .Right }
-    if sgl.isKeyDown(g.sgl, .SPACE) do dir += { .Up }
-    if sgl.isKeyDown(g.sgl, .LSHIFT) do dir += { .Down }
-    sgl.updateFPSCameraPosition(&g.camera, sgl.getDelta(g.sgl), dir)
-    sgl.updateFPSCameraRotation(&g.camera, sgl.getMouseDeltaX(g.sgl), sgl.getMouseDeltaY(g.sgl))
+    if sgl.isKeyDown(.W) do dir += { .Forward }
+    if sgl.isKeyDown(.S) do dir += { .Backward }
+    if sgl.isKeyDown(.A) do dir += { .Left }
+    if sgl.isKeyDown(.D) do dir += { .Right }
+    if sgl.isKeyDown(.SPACE) do dir += { .Up }
+    if sgl.isKeyDown(.LSHIFT) do dir += { .Down }
+    sgl.updateFPSCameraPosition(&g.camera, sgl.getDelta(), dir)
+    sgl.updateFPSCameraRotation(&g.camera, sgl.getMouseDeltaX(), sgl.getMouseDeltaY())
     sgl.updateFPSCamera(&g.camera)
 }
 

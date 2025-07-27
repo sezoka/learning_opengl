@@ -1,6 +1,6 @@
 package sgl
 
-skybox_vertices := [?]f32 {
+gl_skybox_vertices := [?]f32 {
     // positions          
     -1.0,  1.0, -1.0,
      1.0, -1.0, -1.0,
@@ -44,3 +44,15 @@ skybox_vertices := [?]f32 {
      1.0, -1.0,  1.0,
     -1.0, -1.0,  1.0,
 };
+
+gl_rect_vertices := [?]f32 {
+     1,  1, 0.0, 1, 1, // top right
+     1, -1, 0.0, 1, 0, // bottom right
+    -1, -1, 0.0, 0, 0, // bottom let
+    -1,  1, 0.0, 0, 1, // top let 
+}
+
+gl_rect_indices := [?]i32 {
+    0, 1, 3,  // first Triangle
+    1, 2, 3   // second Triangle
+}

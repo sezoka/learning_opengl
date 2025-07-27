@@ -38,7 +38,8 @@ Mesh :: struct {
     vertices: []Vertex,
     indices: []u32,
     textures: []Texture2D,
-    vao, vbo, ebo: u32,
+    vao: GL_VaoId,
+    vbo, ebo: GL_BufferId,
 }
 
 makeMesh :: proc(vertices: []Vertex, indices: []u32, textures: []Texture2D) -> (m: Mesh) {
@@ -57,7 +58,7 @@ drawMesh :: proc(m: Mesh, s: Shader) {
     for &tex, unit in m.textures {
         setUniformTexture2D(s, fmt.ctprintf("U_MATERIAL.%s", tex.name), tex, u32(unit))
     }
-    _drawMesh_GL(m)
+    gl_drawMesh(m)
     for &tex, unit in m.textures {
         disableTexture2D(tex, u32(unit))
     }

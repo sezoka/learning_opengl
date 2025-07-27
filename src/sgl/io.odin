@@ -55,7 +55,10 @@ loadImage :: proc(ally: Allocator, img_path: string, flip := true) -> Image {
         0,
     )
     stbi.set_flip_vertically_on_load(0)
-    assert(img != nil)
+    if img == nil {
+        log.errorf("image '%s' didn't loaded by stbi. reason: '%s'", img_path, stbi.failure_reason())
+        assert(img != nil)
+    }
     defer stbi.image_free(img)
 
     return {
@@ -69,7 +72,7 @@ loadImage :: proc(ally: Allocator, img_path: string, flip := true) -> Image {
 
 deleteImage :: proc(img: ^Image) {
     delete(img.data)
-    img.data = nil
+    img^ = {}
 }
 
 @(require_results)

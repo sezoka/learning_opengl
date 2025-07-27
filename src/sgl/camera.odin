@@ -32,7 +32,6 @@ Camera :: struct {
     world_up:       Vec3,
     yaw:            f32,
     pitch:          f32,
-    ctx: ^Context,
 }
 
 updateFPSCameraPosition :: proc(
@@ -99,7 +98,6 @@ FPSCamera :: struct {
 }
 
 makeFPSCamera :: proc(
-    ctx: ^Context,
     pos := Vec3{0, 0, 0},
     world_up := Vec3{0, 1, 0},
     yaw := DEFAULT_YAW,
@@ -120,7 +118,6 @@ makeFPSCamera :: proc(
             fov          = fov,
             near_frustum = near_frustum,
             far_frustum  = far_frustum,
-            ctx = ctx,
         },
         mouse_sens   = mouse_sensitivity,
     }
@@ -129,16 +126,15 @@ makeFPSCamera :: proc(
 }
 
 updateFPSCameraDefault :: proc(camera: ^FPSCamera) {
-    ctx := camera.base.ctx^
     dir : Direction3DSet
-    if isKeyDown(ctx, .W) do dir += { .Forward }
-    if isKeyDown(ctx, .S) do dir += { .Backward }
-    if isKeyDown(ctx, .A) do dir += { .Left }
-    if isKeyDown(ctx, .D) do dir += { .Right }
-    if isKeyDown(ctx, .SPACE) do dir += { .Up }
-    if isKeyDown(ctx, .LSHIFT) do dir += { .Down }
-    updateFPSCameraPosition(camera, getDelta(ctx), dir)
-    updateFPSCameraRotation(camera, getMouseDeltaX(ctx), getMouseDeltaY(ctx))
+    if isKeyDown(.W) do dir += { .Forward }
+    if isKeyDown(.S) do dir += { .Backward }
+    if isKeyDown(.A) do dir += { .Left }
+    if isKeyDown(.D) do dir += { .Right }
+    if isKeyDown(.SPACE) do dir += { .Up }
+    if isKeyDown(.LSHIFT) do dir += { .Down }
+    updateFPSCameraPosition(camera, getDelta(), dir)
+    updateFPSCameraRotation(camera, getMouseDeltaX(), getMouseDeltaY())
     updateFPSCamera(camera)
 }
 
